@@ -1,9 +1,15 @@
 import QtQuick
 import QtQuick.Controls
 
-ApplicationWindow {
+import VoxelWorld
+
+Window {
     width: 640
     height: 480
     visible: true
-    title: qsTr("Hello World")
+    title: qsTr("Voxel World")
+
+    GLQuickItem {
+        anchors.fill: parent
+    }
 }
