@@ -1,7 +1,7 @@
-attribute highp vec4 vertices;
-varying highp vec2 coords;
+#version 330 core
+layout(location = 0) in vec3 vertices;
+uniform mat4 mvp_matrix;
 
 void main() {
-  gl_Position = vertices;
-  coords = vertices.xy;
+    gl_Position = vec4(vertices, 1.0);
 }

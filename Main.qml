@@ -10,6 +10,7 @@ Window {
     title: qsTr("Voxel World")
 
     GLQuickItem {
+        id: glItem
         anchors.fill: parent
     }
 }

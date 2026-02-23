@@ -1,13 +1,23 @@
 #ifndef GLRENDERER_H
 #define GLRENDERER_H
 
+#define GL_SILENCE_DEPRECATION
+
+#include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QQuickWindow>
+#include <QVector3D>
+
+#include <QtCore/qtmetamacros.h>
+#include <QtGui/qvectornd.h>
+#include <qqmlintegration.h>
 
 class GLRenderer : public QObject, protected QOpenGLFunctions {
   Q_OBJECT
+  QML_ELEMENT
+
 public:
   ~GLRenderer();
 
@@ -19,11 +29,11 @@ public slots:
   void paint();
 
 private:
+
   QSize m_viewportSize;
   QQuickWindow *m_window = nullptr;
 
   QOpenGLShaderProgram *m_program = nullptr;
-  QOpenGLBuffer m_vbo;
 };
 
 #endif // GLRENDERER_H
