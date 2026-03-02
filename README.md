@@ -6,7 +6,7 @@ A fun voxel-based world engine built with Qt and OpenGL.
 
 VoxelWorld is a solo developer project exploring voxel rendering and world generation using modern C++ (C++23) and Qt 6.8. This project serves as both a learning experience and a foundation for potential game development.
 
-For the qt source code check qt.io
+For the qt source code check https://qt.io
 
 ## 🎮 Features
 
