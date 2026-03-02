@@ -19,7 +19,10 @@ qt_add_qml_module(appVoxelWorld
     QML_FILES
         Main.qml
     SOURCES
+        engine/constants.h
         engine/engine.h engine/engine.cpp
+        engine/object.h 
+        engine/player.h engine/player.cpp
         engine/objectengine.h engine/objectengine.cpp
         engine/world.h engine/chunk.h engine/block.h
         
@@ -37,11 +40,17 @@ set_target_properties(appVoxelWorld PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+target_include_directories(appVoxelWorld PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/glrenderer
+    ${CMAKE_CURRENT_SOURCE_DIR}/qmlrenderer
+)
+
 target_link_libraries(appVoxelWorld
     PRIVATE
         Qt6::Core
         Qt6::Gui
-        Qt6::Qml 
+        Qt6::Qml
         Qt6::Quick
 )
 
