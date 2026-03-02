@@ -11,11 +11,14 @@ class GLQuickItem : public QQuickItem {
   Q_OBJECT
   QML_ELEMENT
 
-  Q_PROPERTY(GLRenderer *renderer READ renderer CONSTANT)
+  Q_PROPERTY(GLRenderer *renderer READ renderer NOTIFY rendererInitialized)
 public:
   GLQuickItem();
 
   GLRenderer *renderer() const { return m_renderer; }
+
+signals:
+  void rendererInitialized();
 
 public slots:
   void sync();

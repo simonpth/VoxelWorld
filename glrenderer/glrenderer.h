@@ -3,6 +3,8 @@
 
 #define GL_SILENCE_DEPRECATION
 
+#include "engine/engine.h"
+
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
@@ -17,18 +19,21 @@
 class GLRenderer : public QObject, protected QOpenGLFunctions {
   Q_OBJECT
   QML_ELEMENT
-
+  Q_PROPERTY(Engine *engine WRITE setEngine)
 public:
   ~GLRenderer();
 
   void setViewportSize(const QSize &size) { m_viewportSize = size; }
   void setWindow(QQuickWindow *window) { m_window = window; }
 
+  void setEngine(Engine *engine) { m_engine = engine; }
+
 public slots:
   void init();
   void paint();
 
 private:
+  Engine *m_engine = nullptr;
 
   QSize m_viewportSize;
   QQuickWindow *m_window = nullptr;

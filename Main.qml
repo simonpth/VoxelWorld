@@ -9,8 +9,18 @@ Window {
     visible: true
     title: qsTr("Voxel World")
 
+    Engine {
+        id: engine
+    }
+
     GLQuickItem {
         id: glItem
         anchors.fill: parent
+
+        onRendererChanged: {
+            if (renderer) {
+                renderer.engine = engine;
+            }
+        }
     }
 }

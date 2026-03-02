@@ -1,5 +1,4 @@
 #include "glrenderer.h"
-#include <OpenGL/gl.h>
 #include <QtCore/qlogging.h>
 #include <QtGui/qopengl.h>
 
@@ -24,7 +23,9 @@ void GLRenderer::init() {
     const GLubyte *gl_version = glGetString(GL_VERSION);
     const GLubyte *gl_renderer = glGetString(GL_RENDERER);
 
-    printf("\nGL_VERSION:\n%s\nGL_RENDERER:\n%s\n", gl_version, gl_renderer);
+    qDebug() << "GL_VERSION:"  << reinterpret_cast<const char*>(gl_version);
+    qDebug() << "GL_RENDERER:" << reinterpret_cast<const char*>(gl_renderer);
+    printf("\nGL_VERSION: %s\nGL_RENDERER: %s\n", gl_version, gl_renderer);
   }
 }
 

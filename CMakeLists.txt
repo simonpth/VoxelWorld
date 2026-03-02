@@ -19,8 +19,12 @@ qt_add_qml_module(appVoxelWorld
     QML_FILES
         Main.qml
     SOURCES
-        glquickitem.h glquickitem.cpp
-        glrenderer.h glrenderer.cpp
+        engine/engine.h engine/engine.cpp
+        engine/objectengine.h engine/objectengine.cpp
+        engine/world.h engine/chunk.h engine/block.h
+        
+        glrenderer/glquickitem.h glrenderer/glquickitem.cpp
+        glrenderer/glrenderer.h glrenderer/glrenderer.cpp
     RESOURCES
         shaders/shader.vert
         shaders/shader.frag

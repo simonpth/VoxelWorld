@@ -20,6 +20,8 @@ void GLQuickItem::sync() {
     connect(window(), &QQuickWindow::beforeRendering, m_renderer, &GLRenderer::init, Qt::DirectConnection);
     connect(window(), &QQuickWindow::beforeRenderPassRecording, m_renderer, &GLRenderer::paint, Qt::DirectConnection);
     m_renderer->setWindow(window());
+
+    emit rendererInitialized();
   }
   m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
 }
