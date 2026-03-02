@@ -32,3 +32,7 @@ For the qt source code check qt.io
 - CMake 3.20 or later
 - C++23 compatible compiler
 - OpenGL 4.1 capable graphics card
+
+### Licence
+
+GNU GENERAL PUBLIC LICENSE Version 3
