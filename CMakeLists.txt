@@ -21,13 +21,14 @@ qt_add_qml_module(appVoxelWorld
     SOURCES
         engine/constants.h
         engine/engine.h engine/engine.cpp
-        engine/object.h 
-        engine/player.h engine/player.cpp
+        engine/object.h
+        engine/playercontroller.h engine/playercontroller.cpp
         engine/objectengine.h engine/objectengine.cpp
         engine/world.h engine/chunk.h engine/block.h
-        
+
         glrenderer/glquickitem.h glrenderer/glquickitem.cpp
         glrenderer/glrenderer.h glrenderer/glrenderer.cpp
+        helper.h
     RESOURCES
         shaders/shader.vert
         shaders/shader.frag

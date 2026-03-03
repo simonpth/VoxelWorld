@@ -8,6 +8,7 @@
 
 struct Chunk {
   static constexpr int SIZE = 32;
+  static constexpr int AREA = SIZE * SIZE;
   static constexpr int VOLUME = SIZE * SIZE * SIZE;
 
   Block blocks[VOLUME]; // 32x32x32 blocks
@@ -16,7 +17,7 @@ struct Chunk {
     assert(x >= 0 && x < SIZE);
     assert(y >= 0 && y < SIZE);
     assert(z >= 0 && z < SIZE);
-    return (y << 10) | (z << 5) | x;
+    return y * AREA + z * SIZE + x;
   }
 
   Block &block(int x, int y, int z) {

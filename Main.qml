@@ -23,4 +23,21 @@ Window {
             }
         }
     }
+
+    MouseArea {
+        anchors.fill: parent
+        focus: true
+
+        Keys.onPressed: (event) => {
+            engine.playerController.keyPressed(event.key);
+        }
+        Keys.onReleased: (event) => {
+            engine.playerController.keyReleased(event.key);
+        }
+
+        onPositionChanged: (event) => {
+            engine.playerController.mouseMoved(event.x, event.y);
+            Helper.moveCursorToCenter();
+        }
+    }
 }
