@@ -7,6 +7,7 @@
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QQuickWindow>
@@ -15,6 +16,8 @@
 #include <QtCore/qtmetamacros.h>
 #include <QtGui/qvectornd.h>
 #include <qqmlintegration.h>
+
+#include <chrono>
 
 class GLRenderer : public QObject, protected QOpenGLFunctions {
   Q_OBJECT
@@ -39,6 +42,11 @@ private:
   QQuickWindow *m_window = nullptr;
 
   QOpenGLShaderProgram *m_program = nullptr;
+
+  QOpenGLBuffer m_vbo;
+  QOpenGLVertexArrayObject m_vao;
+
+  std::chrono::high_resolution_clock::time_point m_lastFrame;
 };
 
 #endif // GLRENDERER_H

@@ -6,6 +6,8 @@
 #include "world.h"
 
 #include <QObject>
+#include <QThread>
+#include <QtCore/qthread.h>
 #include <memory>
 #include <qqmlintegration.h>
 
@@ -21,7 +23,12 @@ public:
   ObjectEngine *objectEngine() { return m_objectEngine; }
   PlayerController *playerController() { return m_playerController.get(); }
 
+private slots:
+  void onChunkChanged(PlayerChunkPos newChunk) {};
+
 private:
+  QThread *m_engineThread;
+
   std::unique_ptr<World> m_world;
   ObjectEngine *m_objectEngine;
 

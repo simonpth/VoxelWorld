@@ -2,9 +2,8 @@
 #define HELPER_H
 
 #include <QObject>
+#include <QtCore/qpoint.h>
 #include <qqmlintegration.h>
-#include <QGuiApplication>
-#include <QScreen>
 #include <QCursor>
 
 class Helper : public QObject {
@@ -13,12 +12,8 @@ class Helper : public QObject {
   QML_SINGLETON
 
 public:
-  Q_INVOKABLE void moveCursorToCenter() {
-    if (QGuiApplication::primaryScreen()) {
-      QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
-      QPoint center = screenGeometry.center();
-      QCursor::setPos(center);
-    }
+  Q_INVOKABLE void moveCursorToScreenCoords(QPoint pos) {
+    QCursor::setPos(pos);
   }
 };
 
