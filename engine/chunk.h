@@ -30,9 +30,9 @@ struct Chunk {
 };
 
 struct ChunkPosition {
-  uint16_t x, y, z;
+  int16_t x, y, z;
 
-  ChunkPosition(uint16_t x = 0, uint16_t y = 0, uint16_t z = 0)
+  ChunkPosition(int16_t x = 0, int16_t y = 0, int16_t z = 0)
       : x(x), y(y), z(z) {}
 
   bool operator==(const ChunkPosition &other) const {

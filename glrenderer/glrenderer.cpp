@@ -5,6 +5,8 @@
 #include <QtGui/qopengl.h>
 #include <chrono>
 
+GLRenderer::GLRenderer() {}
+
 GLRenderer::~GLRenderer() { delete m_program; }
 
 void GLRenderer::init() {
@@ -98,12 +100,12 @@ void GLRenderer::init() {
 
 void GLRenderer::paint() {
   // player movement and logic update
-  auto now = std::chrono::high_resolution_clock::now();
+  auto now = std::chrono::steady_clock::now();
   if (m_lastFrame.time_since_epoch().count() != 0) {
     auto delta =
         std::chrono::duration_cast<std::chrono::nanoseconds>(now - m_lastFrame);
-    // qDebug() << "Frame time:" << delta.count() << "ns" << "FPS:" <<
-    // (delta.count() > 0 ? 1e9 / delta.count() : 0);
+
+    m_fps = (delta.count() > 0 ? static_cast<int>(1e9 / delta.count()) : 0);
 
     m_engine->playerController()->update(delta);
   }

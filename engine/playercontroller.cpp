@@ -1,6 +1,7 @@
 #include "playercontroller.h"
 #include "chunk.h"
 #include <QTransform>
+#include <QtCore/qmutex.h>
 #include <chrono>
 
 PlayerController::PlayerController(QObject *parent) : QObject(parent) {}
@@ -60,6 +61,7 @@ void PlayerController::keyReleased(const int &key) {
 }
 
 void PlayerController::mouseMoved(const float &deltaX, const float &deltaY) {
+  QMutexLocker locker(&m_rotationMutex);
   float y = m_rotation.y() + deltaX * 0.1f; // Yaw
   if (y < 0) y += 360;
   if (y >= 360) y -= 360;
@@ -72,6 +74,7 @@ void PlayerController::mouseMoved(const float &deltaX, const float &deltaY) {
 }
 
 void PlayerController::update(std::chrono::nanoseconds nsDelta) {
+  QMutexLocker locker(&m_velocityMutex);
   m_velocity = calculateDirection() * PLAYER_SPEED;
   move(m_velocity * (nsDelta.count() / 1e9f));
 }
@@ -97,7 +100,9 @@ QVector3D PlayerController::calculateDirection() {
     direction.normalize();
 
     QTransform t;
+    m_rotationMutex.lock();
     t.rotate(m_rotation.y());
+    m_rotationMutex.unlock();
     QPointF inputFlat(direction.x(), direction.z());
     QPointF rotatedFlat = t.map(inputFlat);
 
@@ -109,6 +114,8 @@ QVector3D PlayerController::calculateDirection() {
 }
 
 void PlayerController::move(QVector3D delta) {
+  QMutexLocker poslocker(&m_positionMutex);
+  QMutexLocker chunklocker(&m_chunkMutex);
   m_position += delta;
 
   if (m_position.x() < 0) {

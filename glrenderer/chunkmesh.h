@@ -1,7 +1,7 @@
 #ifndef CHUNKMESH_H
 #define CHUNKMESH_H
 
-#include "engine/chunk.h"
+// #include "engine/chunk.h"
 
 #include <atomic>
 #include <QOpenGLBuffer>

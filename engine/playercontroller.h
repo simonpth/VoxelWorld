@@ -2,13 +2,11 @@
 #define PLAYERCONTROLLER_H
 
 #include <QDebug>
-
+#include <QMutex>
 #include <QObject>
 #include <QVector3D>
-#include <QtCore/qtmetamacros.h>
-#include <QtGui/qvectornd.h>
+#include <QMutexLocker>
 #include <qqmlintegration.h>
-#include <QMutex>
 
 #include <chrono>
 
@@ -23,11 +21,10 @@ struct PlayerControllerInput {
 };
 
 struct PlayerChunkPos {
-  int x;
-  int y;
-  int z;
+  int16_t x, y, z;
 
-  PlayerChunkPos(int x = 0, int y = 0, int z = 0) : x(x), y(y), z(z) {}
+  PlayerChunkPos(int16_t x = 0, int16_t y = 0, int16_t z = 0)
+      : x(x), y(y), z(z) {}
 
   bool operator==(const PlayerChunkPos &other) const {
     return x == other.x && y == other.y && z == other.z;
@@ -54,18 +51,31 @@ public:
   QVector3D calculateDirection();
   void move(QVector3D delta);
 
-  QVector3D position() const { return m_position; }
-  PlayerChunkPos currentChunk() const { return m_currentChunk; }
-  QVector3D rotation() const { return m_rotation; }
+  QVector3D position() {
+    QMutexLocker locker(&m_positionMutex);
+    return m_position;
+  }
+  PlayerChunkPos currentChunk() {
+    QMutexLocker locker(&m_chunkMutex);
+    return m_currentChunk;
+  }
+  QVector3D rotation() {
+    QMutexLocker locker(&m_rotationMutex);
+    return m_rotation;
+  }
 
 signals:
   void chunkChanged(PlayerChunkPos newChunk);
 
 private:
   QVector3D m_position;
+  QMutex m_positionMutex;
   PlayerChunkPos m_currentChunk = PlayerChunkPos(0, 0, 0);
+  QMutex m_chunkMutex;
   QVector3D m_velocity;
+  QMutex m_velocityMutex;
   QVector3D m_rotation; // pitch, yaw, roll
+  QMutex m_rotationMutex;
 
   PlayerControllerInput m_input;
   QMutex m_inputMutex;

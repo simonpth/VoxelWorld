@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls.Basic
 
 import VoxelWorld
 
@@ -10,7 +10,7 @@ Window {
     visible: true
     title: qsTr("Voxel World")
 
-    color: "lightgray"
+    color: "gray"
 
     Button {
         id: startButton

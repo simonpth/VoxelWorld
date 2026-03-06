@@ -9,6 +9,8 @@
 
 class World {
 public:
+  static constexpr int CHUNKHEIGHT = 16;
+
   World() = default;
 
   Chunk *chunk(const ChunkPosition &pos) {

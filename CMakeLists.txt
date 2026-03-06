@@ -22,6 +22,7 @@ qt_add_qml_module(appVoxelWorld
     SOURCES
         engine/constants.h
         engine/engine.h engine/engine.cpp
+        engine/enginecontext.h engine/enginecontext.cpp
         engine/object.h
         engine/playercontroller.h engine/playercontroller.cpp
         engine/objectengine.h engine/objectengine.cpp

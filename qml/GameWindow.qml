@@ -7,8 +7,8 @@ Item {
     id: root
     property bool focused: false
 
-    Engine {
-        id: engine
+    EngineContext {
+        id: engineContext
     }
 
     GLQuickItem {
@@ -17,7 +17,7 @@ Item {
 
         onRendererChanged: {
             if (renderer) {
-                renderer.engine = engine;
+                renderer.engine =  engineContext.engine;
             }
         }
     }
@@ -46,7 +46,7 @@ Item {
                 const deltaY = currentY - root.height / 2;
 
                 // Send mouse movement to player controller
-                engine.playerController.mouseMoved(deltaX, deltaY);
+                engineContext.engine.playerController.mouseMoved(deltaX, deltaY);
 
                 Helper.moveCursorToScreenCoords(mapToGlobal(Qt.point(root.width / 2, root.height / 2)));
             }
@@ -57,11 +57,11 @@ Item {
                 root.focused = false;
                 Helper.moveCursorToScreenCoords(mapToGlobal(Qt.point(root.width / 2, root.height / 2)));
             } else {
-                engine.playerController.keyPressed(event.key);
+                engineContext.engine.playerController.keyPressed(event.key);
             }
         }
         Keys.onReleased: event => {
-            engine.playerController.keyReleased(event.key);
+            engineContext.engine.playerController.keyReleased(event.key);
         }
     }
 
@@ -78,9 +78,11 @@ Item {
             repeat: true
             running: true
             onTriggered: {
-                const pos = engine.playerController.position;
+                const pos = engineContext.engine.playerController.position;
                 var text = `Player Position: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`;
-                text += ` | Rotation: (${engine.playerController.rotation.x.toFixed(2)}, ${engine.playerController.rotation.y.toFixed(2)}, ${engine.playerController.rotation.z.toFixed(2)})`;
+                text += ` | Rotation: (${engineContext.engine.playerController.rotation.x.toFixed(2)}, ${engineContext.engine.playerController.rotation.y.toFixed(2)}, ${engineContext.engine.playerController.rotation.z.toFixed(2)})`;
+                text += "\n"
+                text += `FPS: ${glItem.renderer ? glItem.renderer.fps : "N/A"}`;
                 debugText.text = text;
             }
         }
