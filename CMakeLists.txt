@@ -17,7 +17,8 @@ qt_add_qml_module(appVoxelWorld
     URI VoxelWorld
     VERSION 1.0
     QML_FILES
-        Main.qml
+        qml/GameWindow.qml
+        qml/Main.qml
     SOURCES
         engine/constants.h
         engine/engine.h engine/engine.cpp
@@ -28,7 +29,7 @@ qt_add_qml_module(appVoxelWorld
 
         glrenderer/glquickitem.h glrenderer/glquickitem.cpp
         glrenderer/glrenderer.h glrenderer/glrenderer.cpp
-        helper.h
+        qml/helper.h
     RESOURCES
         shaders/shader.vert
         shaders/shader.frag
@@ -45,6 +46,7 @@ target_include_directories(appVoxelWorld PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/glrenderer
     ${CMAKE_CURRENT_SOURCE_DIR}/qmlrenderer
+    ${CMAKE_CURRENT_SOURCE_DIR}/qml
 )
 
 target_link_libraries(appVoxelWorld

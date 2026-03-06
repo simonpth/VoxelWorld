@@ -130,11 +130,11 @@ void GLRenderer::paint() {
   glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   // DRAW
   m_vao.bind();
   m_program->setUniformValue("mvp_matrix", mvp);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glDrawArrays(GL_TRIANGLES, 0, 36);
   m_vao.release();
 

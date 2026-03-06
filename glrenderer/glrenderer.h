@@ -12,9 +12,6 @@
 #include <QOpenGLShaderProgram>
 #include <QQuickWindow>
 #include <QVector3D>
-
-#include <QtCore/qtmetamacros.h>
-#include <QtGui/qvectornd.h>
 #include <qqmlintegration.h>
 
 #include <chrono>

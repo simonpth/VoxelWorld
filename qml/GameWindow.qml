@@ -3,13 +3,8 @@ import QtQuick.Controls
 
 import VoxelWorld
 
-Window {
+Item {
     id: root
-    width: 640
-    height: 480
-    visible: true
-    title: qsTr("Voxel World")
-
     property bool focused: false
 
     Engine {
@@ -30,7 +25,6 @@ Window {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        focus: true
         hoverEnabled: true
         cursorShape: root.focused ? Qt.BlankCursor : Qt.ArrowCursor
 
@@ -38,6 +32,7 @@ Window {
             if (!root.focused) {
                 Helper.moveCursorToScreenCoords(mapToGlobal(Qt.point(root.width / 2, root.height / 2)));
                 root.focused = true;
+                mouseArea.forceActiveFocus();
             }
         }
 

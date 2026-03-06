@@ -6,8 +6,6 @@
 #include "world.h"
 
 #include <QObject>
-#include <QThread>
-#include <QtCore/qthread.h>
 #include <memory>
 #include <qqmlintegration.h>
 
@@ -27,12 +25,11 @@ private slots:
   void onChunkChanged(PlayerChunkPos newChunk) {};
 
 private:
-  QThread *m_engineThread;
-
   std::unique_ptr<World> m_world;
   ObjectEngine *m_objectEngine;
 
   std::unique_ptr<PlayerController> m_playerController;
+  int m_renderDistance = 4;
 };
 
 #endif // ENGINE_H
