@@ -6,7 +6,7 @@
 struct Block {
   uint16_t id; // blocks from 0 to 65535; blocks > 32768 are non solid blocks =>
                // easy bitwise check for solidity
-  uint16_t data; // first 3 bits for rotation, last 5 bits for block state
+  uint16_t data; // 8 bits free, 3 bits for rotation, 5 bits for block state
 
   Block(uint16_t id = 0, uint16_t data = 0) : id(id), data(data) {}
 

@@ -38,6 +38,10 @@ struct ChunkPosition {
   bool operator==(const ChunkPosition &other) const {
     return x == other.x && y == other.y && z == other.z;
   }
+
+  ChunkPosition operator+(const ChunkPosition &other) const {
+    return ChunkPosition(x + other.x, y + other.y, z + other.z);
+  }
 };
 
 namespace std {

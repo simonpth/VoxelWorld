@@ -8,10 +8,10 @@
 
 #include <QObject>
 #include <QThread>
+#include <QtCore/qmutex.h>
 #include <atomic>
 #include <memory>
 #include <qqmlintegration.h>
-#include <vector>
 
 class Engine : public QObject {
   Q_OBJECT
@@ -26,25 +26,10 @@ public:
   ObjectEngine *objectEngine() { return m_objectEngine.get(); }
   PlayerController *playerController() { return m_playerController.get(); }
 
-  void setRenderDistance(int distance) {
-    if (m_renderDistance != distance) {
-      m_renderDistance = distance;
-      calculateRelativeChunkOffsets();
-      updateChunksToRender();
-    }
-  }
-  int renderDistance() const { return m_renderDistance; }
-
-  bool chunksToRenderDirty() const { return m_chunksToRenderDirty.load(); }
 
 public slots:
   void run();
   void stop() { m_running = false; }
-
-private slots:
-  void onPlayerChunkChanged() {
-    updateChunksToRender();
-  };
 
 private:
   QThread *m_gameLoopThread;
@@ -55,14 +40,6 @@ private:
   std::unique_ptr<ObjectEngine> m_objectEngine;
 
   std::unique_ptr<PlayerController> m_playerController;
-
-  int m_renderDistance = 4;
-  std::vector<ChunkPosition> m_relativeChunkOffsets;
-  void calculateRelativeChunkOffsets();
-  std::vector<ChunkPosition> m_chunksToRender;
-  QMutex m_chunksToRenderMutex;
-  void updateChunksToRender();
-  std::atomic<bool> m_chunksToRenderDirty = false;
 };
 
 #endif // ENGINE_H

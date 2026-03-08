@@ -1,14 +1,20 @@
 #ifndef PLAYERCONTROLLER_H
 #define PLAYERCONTROLLER_H
 
+#include <QtCore/qreadwritelock.h>
+#include <atomic>
+#include <chrono>
+#include <vector>
+
 #include <QDebug>
 #include <QMutex>
-#include <QObject>
-#include <QVector3D>
 #include <QMutexLocker>
+#include <QObject>
+#include <QReadWriteLock>
+#include <QVector3D>
 #include <qqmlintegration.h>
 
-#include <chrono>
+#include "chunk.h"
 
 struct PlayerControllerInput {
   bool moveForward = false;
@@ -39,6 +45,8 @@ class PlayerController : public QObject {
   Q_PROPERTY(QVector3D position READ position)
   Q_PROPERTY(PlayerChunkPos currentChunk READ currentChunk)
   Q_PROPERTY(QVector3D rotation READ rotation)
+  Q_PROPERTY(int renderDistance READ renderDistance WRITE setRenderDistance
+                 NOTIFY renderDistanceChanged)
 
 public:
   PlayerController(QObject *parent = nullptr);
@@ -47,38 +55,59 @@ public:
   Q_INVOKABLE void keyReleased(const int &key);
   Q_INVOKABLE void mouseMoved(const float &deltaX, const float &deltaY);
 
-  void update(std::chrono::nanoseconds nsDelta);
+  void update();
   QVector3D calculateDirection();
   void move(QVector3D delta);
 
   QVector3D position() {
-    QMutexLocker locker(&m_positionMutex);
+    QReadLocker locker(&m_positionMutex);
     return m_position;
   }
   PlayerChunkPos currentChunk() {
-    QMutexLocker locker(&m_chunkMutex);
+    QReadLocker locker(&m_chunkMutex);
     return m_currentChunk;
   }
   QVector3D rotation() {
-    QMutexLocker locker(&m_rotationMutex);
+    QReadLocker locker(&m_rotationMutex);
     return m_rotation;
   }
 
+  int renderDistance() { return m_renderDistance.load(); }
+  void setRenderDistance(int distance);
+  bool chunksToRenderDirty() const { return m_chunksToRenderDirty.load(); }
+  void setChunksToRenderDirty(bool dirty) {
+    m_chunksToRenderDirty.store(dirty);
+  }
+  std::vector<ChunkPosition> relativeChunkOffsets() {
+    QReadLocker locker(&m_relativeChunkOffsetsMutex);
+    return m_relativeChunkOffsets;
+  }
+
 signals:
-  void chunkChanged(PlayerChunkPos newChunk);
+  void renderDistanceChanged(int distance);
 
 private:
   QVector3D m_position;
-  QMutex m_positionMutex;
+  QReadWriteLock m_positionMutex;
   PlayerChunkPos m_currentChunk = PlayerChunkPos(0, 0, 0);
-  QMutex m_chunkMutex;
+  QReadWriteLock m_chunkMutex;
   QVector3D m_velocity;
-  QMutex m_velocityMutex;
+  QReadWriteLock m_velocityMutex;
   QVector3D m_rotation; // pitch, yaw, roll
-  QMutex m_rotationMutex;
+  QReadWriteLock m_rotationMutex;
 
   PlayerControllerInput m_input;
-  QMutex m_inputMutex;
+  QReadWriteLock m_inputMutex;
+
+  std::chrono::steady_clock::time_point m_lastUpdateTime;
+  QMutex m_updateMutex;
+
+  std::atomic<int> m_renderDistance;
+  QMutex m_renderDistanceSetMutex;
+  std::vector<ChunkPosition> m_relativeChunkOffsets;
+  QReadWriteLock m_relativeChunkOffsetsMutex;
+  std::atomic<bool> m_chunksToRenderDirty = false;
+  void calculateRelativeChunkOffsets();
 };
 
 #endif // PLAYERCONTROLLER_H

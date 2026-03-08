@@ -1,5 +1,6 @@
 #include "engine.h"
 
+#include <QtCore/qmutex.h>
 #include <chrono>
 
 Engine::Engine(QObject *parent) : QObject(parent) {
@@ -7,12 +8,8 @@ Engine::Engine(QObject *parent) : QObject(parent) {
   m_objectEngine = std::make_unique<ObjectEngine>(this);
 
   m_playerController = std::make_unique<PlayerController>(this);
-  connect(m_playerController.get(), &PlayerController::chunkChanged, this,
-          &Engine::onPlayerChunkChanged);
 
   m_gameLoopThread = QThread::create([this]() { gameLoop(); });
-
-  calculateRelativeChunkOffsets();
 }
 
 Engine::~Engine() {
@@ -59,40 +56,4 @@ void Engine::run() {
   if (!m_gameLoopThread->isRunning()) {
     m_gameLoopThread->start();
   }
-}
-
-void Engine::calculateRelativeChunkOffsets() {
-  // Generate relative chunk offsets within the render distance
-  // This is not the most efficient way to do this, but it works for now
-  m_relativeChunkOffsets.clear();
-  m_relativeChunkOffsets.reserve((2 * m_renderDistance + 1) *
-                                 (2 * m_renderDistance + 1) *
-                                 (2 * m_renderDistance + 1));
-  for (int x = -m_renderDistance; x <= m_renderDistance; ++x) {
-    for (int y = -m_renderDistance; y <= m_renderDistance; ++y) {
-      for (int z = -m_renderDistance; z <= m_renderDistance; ++z) {
-        if (x * x + y * y + z * z <= m_renderDistance * m_renderDistance) {
-          m_relativeChunkOffsets.emplace_back(x, y, z);
-        }
-      }
-    }
-  }
-  m_relativeChunkOffsets.shrink_to_fit();
-}
-
-void Engine::updateChunksToRender() {
-  QMutexLocker locker(&m_chunksToRenderMutex);
-  m_chunksToRender.clear();
-  m_chunksToRender.reserve(m_relativeChunkOffsets.size());
-  PlayerChunkPos playerChunk = m_playerController->currentChunk();
-  for (const auto &offset : m_relativeChunkOffsets) {
-    if (playerChunk.y + offset.y < 0 ||
-        playerChunk.y + offset.y >= World::CHUNKHEIGHT)
-      continue; // skip chunks below y=0 or above the world height
-    m_chunksToRender.emplace_back(playerChunk.x + offset.x,
-                                  playerChunk.y + offset.y,
-                                  playerChunk.z + offset.z);
-  }
-  m_chunksToRenderDirty = true;
-  qDebug() << "Updated chunks to render. Count:" << m_chunksToRender.size();
 }

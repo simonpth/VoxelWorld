@@ -1,9 +1,6 @@
 #include "glrenderer.h"
-#include <OpenGL/gl.h>
+#include "chunkmesh.h"
 #include <QtCore/qlogging.h>
-#include <QtGui/qmatrix4x4.h>
-#include <QtGui/qopengl.h>
-#include <chrono>
 
 GLRenderer::GLRenderer() {}
 
@@ -24,70 +21,6 @@ void GLRenderer::init() {
 
     m_program->link();
 
-    // setup cube
-    float vertices[] = {
-        // front face (z = 1)
-        0.0f, 0.0f, 1.0f, // bottom-left
-        1.0f, 0.0f, 1.0f, // bottom-right
-        1.0f, 1.0f, 1.0f, // top-right
-        1.0f, 1.0f, 1.0f, // top-right
-        0.0f, 1.0f, 1.0f, // top-left
-        0.0f, 0.0f, 1.0f, // bottom-left
-
-        // back face (z = 0)
-        0.0f, 0.0f, 0.0f, // bottom-left
-        0.0f, 1.0f, 0.0f, // top-left
-        1.0f, 1.0f, 0.0f, // top-right
-        1.0f, 1.0f, 0.0f, // top-right
-        1.0f, 0.0f, 0.0f, // bottom-right
-        0.0f, 0.0f, 0.0f, // bottom-left
-
-        // top face (y = 1)
-        0.0f, 1.0f, 0.0f, // back-left
-        0.0f, 1.0f, 1.0f, // front-left
-        1.0f, 1.0f, 1.0f, // front-right
-        1.0f, 1.0f, 1.0f, // front-right
-        1.0f, 1.0f, 0.0f, // back-right
-        0.0f, 1.0f, 0.0f, // back-left
-
-        // bottom face (y = 0)
-        0.0f, 0.0f, 0.0f, // back-left
-        1.0f, 0.0f, 0.0f, // back-right
-        1.0f, 0.0f, 1.0f, // front-right
-        1.0f, 0.0f, 1.0f, // front-right
-        0.0f, 0.0f, 1.0f, // front-left
-        0.0f, 0.0f, 0.0f, // back-left
-
-        // right face (x = 1)
-        1.0f, 0.0f, 0.0f, // bottom-back
-        1.0f, 1.0f, 0.0f, // top-back
-        1.0f, 1.0f, 1.0f, // top-front
-        1.0f, 1.0f, 1.0f, // top-front
-        1.0f, 0.0f, 1.0f, // bottom-front
-        1.0f, 0.0f, 0.0f, // bottom-back
-
-        // left face (x = 0)
-        0.0f, 0.0f, 0.0f, // bottom-back
-        0.0f, 0.0f, 1.0f, // bottom-front
-        0.0f, 1.0f, 1.0f, // top-front
-        0.0f, 1.0f, 1.0f, // top-front
-        0.0f, 1.0f, 0.0f, // top-back
-        0.0f, 0.0f, 0.0f  // bottom-back
-    };
-
-    m_vao.create();
-    m_vao.bind();
-
-    m_vbo.create();
-    m_vbo.bind();
-    m_vbo.allocate(vertices, sizeof(vertices));
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void *)0);
-
-    m_vao.release();
-
     // for debuging
     const GLubyte *gl_version = glGetString(GL_VERSION);
     const GLubyte *gl_renderer = glGetString(GL_RENDERER);
@@ -106,10 +39,10 @@ void GLRenderer::paint() {
         std::chrono::duration_cast<std::chrono::nanoseconds>(now - m_lastFrame);
 
     m_fps = (delta.count() > 0 ? static_cast<int>(1e9 / delta.count()) : 0);
-
-    m_engine->playerController()->update(delta);
   }
   m_lastFrame = now;
+
+  m_engine->playerController()->update();
 
   QMatrix4x4 mvp;
   mvp.perspective(60.0f,
@@ -118,6 +51,45 @@ void GLRenderer::paint() {
   mvp.rotate(m_engine->playerController()->rotation().x(), 1, 0, 0);
   mvp.rotate(m_engine->playerController()->rotation().y(), 0, 1, 0);
   mvp.translate(-m_engine->playerController()->position());
+
+  // chunk updates
+  if (m_engine->playerController()->chunksToRenderDirty()) {
+    m_engine->playerController()->setChunksToRenderDirty(false);
+    // reset the dirty flag first so that we don't miss any updates
+    // that happen during this function
+    auto playerChunk = m_engine->playerController()->currentChunk();
+    auto relativeOffsets = m_engine->playerController()->relativeChunkOffsets();
+
+    std::unordered_map<ChunkPosition, bool> chunksToKeep;
+    for (const auto &offset : relativeOffsets) {
+      auto chunkPos =
+          ChunkPosition(playerChunk.x + offset.x, playerChunk.y + offset.y,
+                        playerChunk.z + offset.z);
+      if (chunkPos.y < 0 || chunkPos.y >= World::CHUNKHEIGHT)
+        continue; // skip chunks that are out of vertical bounds
+
+      // if the chunk isn't already in the map, create a new mesh for it
+      if (m_chunkMeshes.find(chunkPos) == m_chunkMeshes.end()) {
+        auto mesh = std::make_unique<ChunkMesh>();
+        mesh->setup();
+        mesh->setChunkPosition(chunkPos);
+        m_chunkMeshes.emplace(chunkPos, std::move(mesh));
+        qDebug() << "Created mesh for chunk at" << chunkPos.x << chunkPos.y
+                 << chunkPos.z;
+      }
+
+      chunksToKeep[chunkPos] = true;
+    }
+
+    // remove chunks that are no longer in the render distance
+    for (auto it = m_chunkMeshes.begin(); it != m_chunkMeshes.end();) {
+      if (chunksToKeep.find(it->first) == chunksToKeep.end()) {
+        it = m_chunkMeshes.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
 
   // painting
   m_window->beginExternalCommands();
@@ -135,10 +107,11 @@ void GLRenderer::paint() {
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   // DRAW
-  m_vao.bind();
   m_program->setUniformValue("mvp_matrix", mvp);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
-  m_vao.release();
+
+  for (auto &[pos, mesh] : m_chunkMeshes) {
+    mesh->render();
+  }
 
   // CLEANUP FOR QML
   glDisable(GL_DEPTH_TEST);
