@@ -25,3 +25,24 @@ This is noticed by the rendering thread which then will initiate the creation of
 ## Traversing Order (most inner loop first)
 
 x -> z -> y
+
+## Vertex Data Structure (uint64_t)
+
+16 bit: block id
+
+pos = coord / 8 => This allows for subvoxel detail meshes
+
+8 bit: x \
+8 bit: y \
+8 bit: z
+
+8 bit: width \
+8 bit: height
+
+5 bit: rotation
+
+3 bit: free
+
+### Rotation
+
+0-5 same as cube faces

@@ -3,36 +3,34 @@
 
 #include "engine/chunk.h"
 
-#include <atomic>
 #include <QOpenGLBuffer>
+#include <QOpenGLFunctions>
 #include <QOpenGLVertexArrayObject>
 #include <QReadWriteLock>
-#include <vector>
+#include <atomic>
 
-class ChunkMesh {
+class ChunkMesh : protected QOpenGLFunctions {
 public:
   ChunkMesh();
 
   bool isReady() const { return m_ready.load(); }
-  bool isDirty() const { return m_dirty.load(); }
 
   void setup();
 
   void setChunkPosition(const ChunkPosition &pos) { m_chunkPosition = pos; }
   ChunkPosition chunkPosition() const { return m_chunkPosition; }
 
-  void updateMesh();
+  void updateMeshAsync();
 
   void render();
 
 private:
-  QReadWriteLock m_blocksVBOLock;
-  QOpenGLBuffer m_blocksVBO;
-  std::vector<uint32_t> m_blockVertices;
-  QOpenGLVertexArrayObject m_blocksVAO;
+  QReadWriteLock m_vboLock;
+  QOpenGLBuffer m_vbo;
+  int m_vertexCount = 0;
+  QOpenGLVertexArrayObject m_vao;
 
   std::atomic<bool> m_ready = false;
-  std::atomic<bool> m_dirty = true;
 
   ChunkPosition m_chunkPosition;
 };

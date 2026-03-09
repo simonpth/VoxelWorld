@@ -1,6 +1,7 @@
 #include "glrenderer.h"
 #include "chunkmesh.h"
 #include <QtCore/qlogging.h>
+#include <QtGui/qopenglfunctions.h>
 
 GLRenderer::GLRenderer() {}
 
@@ -20,6 +21,9 @@ void GLRenderer::init() {
         QOpenGLShader::Fragment, ":/qt/qml/VoxelWorld/shaders/shader.frag");
 
     m_program->link();
+
+    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
+    glEnableVertexAttribArray(0);
 
     // for debuging
     const GLubyte *gl_version = glGetString(GL_VERSION);
@@ -62,23 +66,23 @@ void GLRenderer::paint() {
 
     std::unordered_map<ChunkPosition, bool> chunksToKeep;
     for (const auto &offset : relativeOffsets) {
-      auto chunkPos =
-          ChunkPosition(playerChunk.x + offset.x, playerChunk.y + offset.y,
-                        playerChunk.z + offset.z);
-      if (chunkPos.y < 0 || chunkPos.y >= World::CHUNKHEIGHT)
-        continue; // skip chunks that are out of vertical bounds
+      for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
+        auto chunkPos = ChunkPosition(playerChunk.x + offset.x, y,
+                                      playerChunk.z + offset.z);
+        if (chunkPos.y < 0 || chunkPos.y >= World::CHUNKHEIGHT)
+          continue; // skip chunks that are out of vertical bounds
 
-      // if the chunk isn't already in the map, create a new mesh for it
-      if (m_chunkMeshes.find(chunkPos) == m_chunkMeshes.end()) {
-        auto mesh = std::make_unique<ChunkMesh>();
-        mesh->setup();
-        mesh->setChunkPosition(chunkPos);
-        m_chunkMeshes.emplace(chunkPos, std::move(mesh));
-        qDebug() << "Created mesh for chunk at" << chunkPos.x << chunkPos.y
-                 << chunkPos.z;
+        // if the chunk isn't already in the map, create a new mesh for it
+        if (m_chunkMeshes.find(chunkPos) == m_chunkMeshes.end()) {
+          auto mesh = std::make_unique<ChunkMesh>();
+          mesh->setup();
+          mesh->setChunkPosition(chunkPos);
+          mesh->updateMeshAsync();
+          m_chunkMeshes.emplace(chunkPos, std::move(mesh));
+        }
+
+        chunksToKeep[chunkPos] = true;
       }
-
-      chunksToKeep[chunkPos] = true;
     }
 
     // remove chunks that are no longer in the render distance
@@ -110,6 +114,8 @@ void GLRenderer::paint() {
   m_program->setUniformValue("mvp_matrix", mvp);
 
   for (auto &[pos, mesh] : m_chunkMeshes) {
+    m_program->setUniformValue("relativeChunkPos", pos.x * Chunk::SIZE,
+                               pos.y * Chunk::SIZE, pos.z * Chunk::SIZE);
     mesh->render();
   }
 

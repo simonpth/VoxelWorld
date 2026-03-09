@@ -144,14 +144,11 @@ void PlayerController::calculateRelativeChunkOffsets() {
   QWriteLocker locker(&m_relativeChunkOffsetsMutex);
   m_relativeChunkOffsets.clear();
   m_relativeChunkOffsets.reserve((2 * m_renderDistance + 1) *
-                                 (2 * m_renderDistance + 1) *
                                  (2 * m_renderDistance + 1));
   for (int x = -m_renderDistance; x <= m_renderDistance; ++x) {
-    for (int y = -m_renderDistance; y <= m_renderDistance; ++y) {
-      for (int z = -m_renderDistance; z <= m_renderDistance; ++z) {
-        if (x * x + y * y + z * z < m_renderDistance * m_renderDistance)
-          m_relativeChunkOffsets.emplace_back(x, y, z);
-      }
+    for (int z = -m_renderDistance; z <= m_renderDistance; ++z) {
+      if (x * x + z * z < m_renderDistance * m_renderDistance)
+        m_relativeChunkOffsets.emplace_back(x, 0, z);
     }
   }
   m_relativeChunkOffsets.shrink_to_fit();

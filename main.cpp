@@ -1,4 +1,4 @@
-//#define GL_SILENCE_DEPRECATION
+#define GL_SILENCE_DEPRECATION
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
