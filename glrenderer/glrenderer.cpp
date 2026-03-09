@@ -22,9 +22,6 @@ void GLRenderer::init() {
 
     m_program->link();
 
-    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
-    glEnableVertexAttribArray(0);
-
     // for debuging
     const GLubyte *gl_version = glGetString(GL_VERSION);
     const GLubyte *gl_renderer = glGetString(GL_RENDERER);

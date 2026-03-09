@@ -12,5 +12,5 @@ vec3 blockColors[3] = vec3[](
 );
 
 void main() {
-    FragColor = vec4(blockColors[blockIDOut], 1.0);
+    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

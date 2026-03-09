@@ -8,6 +8,8 @@
 #include <QOpenGLVertexArrayObject>
 #include <QReadWriteLock>
 #include <atomic>
+#include <vector>
+#include <cstdint>
 
 class ChunkMesh : protected QOpenGLFunctions {
 public:
@@ -25,11 +27,14 @@ public:
   void render();
 
 private:
-  QReadWriteLock m_vboLock;
   QOpenGLBuffer m_vbo;
-  int m_vertexCount = 0;
+  QReadWriteLock m_verticesLock;
+  std::vector<uint64_t> m_vertices;
+  size_t m_uploadedVertexCount = 0;
+
   QOpenGLVertexArrayObject m_vao;
 
+  std::atomic<bool> m_newAllocRequired = false;
   std::atomic<bool> m_ready = false;
 
   ChunkPosition m_chunkPosition;

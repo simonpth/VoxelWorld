@@ -6,7 +6,7 @@
 #include <QThreadPool>
 #include <cstdint>
 
-ChunkMesh::ChunkMesh() {}
+ChunkMesh::ChunkMesh() : QOpenGLFunctions(QOpenGLContext::currentContext()) {}
 
 void ChunkMesh::setup() {
   m_vao.create();
@@ -15,6 +15,10 @@ void ChunkMesh::setup() {
   m_vbo.create();
   m_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
   m_vbo.bind();
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
+  glVertexAttribDivisor(0, 1);
 
   m_vao.release();
 }
@@ -32,21 +36,19 @@ uint64_t generateVertex(int id, int x, int y, int z, int width, int height, int 
 void ChunkMesh::updateMeshAsync() {
   QThreadPool::globalInstance()->start([this]() {
     // Generate dummy vertex data for testing
-    std::vector<uint64_t> vertices;
 
-    vertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 0));
-    vertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 1));
-    vertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 2));
-    vertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 3));
-    vertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 4));
-    vertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 5));
-    
-    // Update VBO with new vertex data
-    QWriteLocker locker(&m_vboLock);
-    m_vbo.bind();
-    m_vbo.allocate(vertices.data(), static_cast<int>(vertices.size() * sizeof(uint64_t)));
-    m_vbo.release();
-    m_vertexCount = static_cast<int>(vertices.size());
+    std::vector<uint64_t> newVertices;
+
+    newVertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 0));
+    newVertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 1));
+    newVertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 2));
+    newVertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 3));
+    newVertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 4));
+    newVertices.push_back(generateVertex(1, 0, 0, 0, 8, 8, 5));
+
+    QWriteLocker locker(&m_verticesLock);
+    m_vertices.swap(newVertices);
+    m_newAllocRequired.store(true);
 
     m_ready.store(true);
   });
@@ -56,7 +58,19 @@ void ChunkMesh::render() {
   if (!isReady())
     return;
 
+  if(m_newAllocRequired.load()) {
+    m_vbo.bind();
+    QReadLocker locker(&m_verticesLock);
+    m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(uint64_t)));
+    m_uploadedVertexCount = m_vertices.size();
+    m_newAllocRequired.store(false);
+  }
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
+  glVertexAttribDivisor(0, 1);
+
   m_vao.bind();
-  glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, m_vertexCount);
+  glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, m_uploadedVertexCount, 4);
   m_vao.release();
 }

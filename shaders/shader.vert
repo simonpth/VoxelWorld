@@ -1,7 +1,7 @@
 #version 330 core
 layout(location = 0) in uvec2 data;
 
-uniform ivec3 relativeChunkPos;
+uniform vec3 relativeChunkPos;
 uniform mat4 mvp_matrix;
 
 flat out uint blockIDOut;
@@ -54,6 +54,7 @@ void main() {
     uint height = (data.x >> 8) & 0xFFu;
     uint rotation = (data.x >> 3) & 0x1Fu;
 
-    gl_Position = mvp_matrix * vec4(vertices[rotation * 4u + uint(gl_InstanceID)] + vec3(x, y, z) + relativeChunkPos, 1.0);
+    //gl_Position = mvp_matrix * vec4(vertices[rotation * 4u + uint(gl_InstanceID)] + vec3(x, y, z) + relativeChunkPos, 1.0);
+    gl_Position = mvp_matrix * vec4(vertices[gl_InstanceID], 1.0);
     blockIDOut = blockID;
 }
