@@ -5,23 +5,30 @@
 
 #include <QObject>
 #include <QThread>
-#include <QtCore/qthread.h>
+#include <QtCore/qreadwritelock.h>
+#include <memory>
 #include <qqmlintegration.h>
 
-class EngineContext : public QObject {
-  Q_OBJECT
-  QML_ELEMENT
-  Q_PROPERTY(Engine *engine READ engine CONSTANT)
-
+class EngineContext {
 public:
-  EngineContext(QObject *parent = nullptr);
-  ~EngineContext();
+  static EngineContext &instance();
 
-  Engine *engine() { return m_engine; }
+  void createEngine();
+  void deleteEngine();
+
+  std::shared_ptr<Engine> engine();
 
 private:
-  Engine *m_engine;
-  QThread *m_engineThread;
+  EngineContext() = default;
+
+  QReadWriteLock m_lock;
+  std::shared_ptr<Engine> m_engine;
+  std::unique_ptr<QThread> m_engineThread;
+
+  bool m_isEngineCreated = false;
+
+  EngineContext(const EngineContext &) = delete;
+  EngineContext &operator=(const EngineContext &) = delete;
 };
 
 #endif // ENGINECONTEXT_H

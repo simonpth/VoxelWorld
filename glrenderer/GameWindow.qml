@@ -6,27 +6,18 @@ import VoxelWorld
 Item {
     id: root
     property bool focused: false
-
-    EngineContext {
-        id: engineContext
-    }
+    property var engine
 
     GLQuickItem {
         id: glItem
         anchors.fill: parent
-
-        onRendererChanged: {
-            if (renderer) {
-                renderer.engine =  engineContext.engine;
-            }
-        }
     }
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: root.focused ? Qt.BlankCursor : Qt.ArrowCursor
+        // cursorShape: root.focused ? Qt.BlankCursor : Qt.ArrowCursor
 
         onPressed: {
             if (!root.focused) {
@@ -46,7 +37,11 @@ Item {
                 const deltaY = currentY - root.height / 2;
 
                 // Send mouse movement to player controller
-                engineContext.engine.playerController.mouseMoved(deltaX, deltaY);
+                if (root.engine)
+                    root.engine.playerController.mouseMoved(deltaX, deltaY);
+                else {
+                    root.engine = EngineQML.instance();
+                }
 
                 Helper.moveCursorToScreenCoords(mapToGlobal(Qt.point(root.width / 2, root.height / 2)));
             }
@@ -57,11 +52,14 @@ Item {
                 root.focused = false;
                 Helper.moveCursorToScreenCoords(mapToGlobal(Qt.point(root.width / 2, root.height / 2)));
             } else {
-                engineContext.engine.playerController.keyPressed(event.key);
+                if (root.engine)
+                    root.engine.playerController.keyPressed(event.key);
+                else
+                    root.engine = EngineQML.instance();
             }
         }
         Keys.onReleased: event => {
-            engineContext.engine.playerController.keyReleased(event.key);
+            root.engine.playerController.keyReleased(event.key);
         }
     }
 
@@ -78,12 +76,14 @@ Item {
             repeat: true
             running: true
             onTriggered: {
-                const pos = engineContext.engine.playerController.position;
-                var text = `Player Position: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`;
-                text += ` | Rotation: (${engineContext.engine.playerController.rotation.x.toFixed(2)}, ${engineContext.engine.playerController.rotation.y.toFixed(2)}, ${engineContext.engine.playerController.rotation.z.toFixed(2)})`;
-                text += "\n"
-                text += `FPS: ${glItem.renderer ? glItem.renderer.fps : "N/A"}`;
-                debugText.text = text;
+                if (root.engine) {
+                    const pos = root.engine.playerController.position;
+                    var text = `Player Position: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`;
+                    text += ` | Rotation: (${root.engine.playerController.rotation.x.toFixed(2)}, ${root.engine.playerController.rotation.y.toFixed(2)}, ${root.engine.playerController.rotation.z.toFixed(2)})`;
+                    text += "\n";
+                    text += `FPS: ${glItem.renderer ? glItem.renderer.fps : "N/A"}`;
+                    debugText.text = text;
+                }
             }
         }
     }

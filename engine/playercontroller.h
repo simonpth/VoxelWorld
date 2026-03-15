@@ -2,6 +2,7 @@
 #define PLAYERCONTROLLER_H
 
 #include <QtCore/qreadwritelock.h>
+#include <QtGui/qvectornd.h>
 #include <atomic>
 #include <chrono>
 #include <vector>
@@ -37,12 +38,12 @@ struct PlayerChunkPos {
   }
 };
 
-static const float PLAYER_SPEED = 5.0f; // units per second
+static const float PLAYER_SPEED = 100.0f; // units per second
 
 class PlayerController : public QObject {
   Q_OBJECT
   QML_ELEMENT
-  Q_PROPERTY(QVector3D position READ position)
+  Q_PROPERTY(QVector3D position READ worldPosition)
   Q_PROPERTY(PlayerChunkPos currentChunk READ currentChunk)
   Q_PROPERTY(QVector3D rotation READ rotation)
   Q_PROPERTY(int renderDistance READ renderDistance WRITE setRenderDistance
@@ -62,6 +63,23 @@ public:
   QVector3D position() {
     QReadLocker locker(&m_positionMutex);
     return m_position;
+  }
+  void setPosition(int x, int y, int z) {
+    QWriteLocker locker(&m_positionMutex);
+    m_position = QVector3D(x%Chunk::SIZE, y%Chunk::SIZE, z%Chunk::SIZE);
+    PlayerChunkPos newChunkPos = PlayerChunkPos(x/Chunk::SIZE, y/Chunk::SIZE, z/Chunk::SIZE);
+    QWriteLocker chunkLocker(&m_chunkMutex);
+    if(newChunkPos != m_currentChunk) {
+      m_currentChunk = newChunkPos;
+      m_chunksToRenderDirty.store(true);
+    }
+  }
+  QVector3D worldPosition() {
+    QReadLocker locker(&m_positionMutex);
+    QReadLocker chunkLocker(&m_chunkMutex);
+    return QVector3D(m_currentChunk.x * Chunk::SIZE + m_position.x(),
+                     m_currentChunk.y * Chunk::SIZE + m_position.y(),
+                     m_currentChunk.z * Chunk::SIZE + m_position.z());
   }
   PlayerChunkPos currentChunk() {
     QReadLocker locker(&m_chunkMutex);
@@ -87,7 +105,7 @@ signals:
   void renderDistanceChanged(int distance);
 
 private:
-  QVector3D m_position;
+  QVector3D m_position = QVector3D(3.0f, 3.0f, 3.0f);
   QReadWriteLock m_positionMutex;
   PlayerChunkPos m_currentChunk = PlayerChunkPos(0, 0, 0);
   QReadWriteLock m_chunkMutex;

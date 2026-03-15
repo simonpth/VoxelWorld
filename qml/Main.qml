@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls.Basic
 
 import VoxelWorld
 
@@ -10,27 +9,8 @@ Window {
     visible: true
     title: qsTr("Voxel World")
 
-    color: "gray"
-
-    Button {
-        id: startButton
-        text: qsTr("Start Game")
-        anchors.centerIn: parent
-        onClicked: {
-            startButton.visible = false;
-            gameWindowLoader.active = true;
-        }
-    }
-
-    Loader {
-        id: gameWindowLoader
+    GameWindow {
+        id: gameWindow
         anchors.fill: parent
-        active: false
-        sourceComponent: Component {
-            GameWindow {
-                id: gameWindow
-                anchors.fill: parent
-            }
-        }
     }
 }

@@ -1,7 +1,6 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "chunk.h"
 #include "objectengine.h"
 #include "playercontroller.h"
 #include "world.h"
@@ -22,7 +21,7 @@ public:
   Engine(QObject *parent = nullptr);
   ~Engine();
 
-  World *world() { return m_world.get(); }
+  std::shared_ptr<World> world() { return m_world; }
   ObjectEngine *objectEngine() { return m_objectEngine.get(); }
   PlayerController *playerController() { return m_playerController.get(); }
 
@@ -36,7 +35,7 @@ private:
   std::atomic<bool> m_running = false;
   void gameLoop();
 
-  std::unique_ptr<World> m_world;
+  std::shared_ptr<World> m_world;
   std::unique_ptr<ObjectEngine> m_objectEngine;
 
   std::unique_ptr<PlayerController> m_playerController;

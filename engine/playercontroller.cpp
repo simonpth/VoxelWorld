@@ -1,7 +1,8 @@
 #include "playercontroller.h"
 
 PlayerController::PlayerController(QObject *parent) : QObject(parent) {
-  setRenderDistance(4); // default render distance
+  setRenderDistance(10); // default render distance
+  setPosition(16, 442, 16);
 }
 
 void PlayerController::keyPressed(const int &key) {

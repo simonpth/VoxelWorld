@@ -43,6 +43,6 @@ pos = coord / 8 => This allows for subvoxel detail meshes
 
 3 bit: free
 
-### Rotation
+### Rotation / Face
 
 0-5 same as cube faces

@@ -20,7 +20,7 @@ struct Chunk {
     return y * AREA + z * SIZE + x;
   }
 
-  Block &block(int x, int y, int z) {
+  const Block &block(int x, int y, int z) const{
     return blocks[blockIndex(x, y, z)];
   }
 
@@ -32,21 +32,21 @@ struct Chunk {
 struct ChunkPosition {
   int16_t x, y, z;
 
-  ChunkPosition(int16_t x = 0, int16_t y = 0, int16_t z = 0)
+  constexpr ChunkPosition(int16_t x = 0, int16_t y = 0, int16_t z = 0) noexcept
       : x(x), y(y), z(z) {}
 
-  bool operator==(const ChunkPosition &other) const {
+  constexpr bool operator==(const ChunkPosition &other) const noexcept {
     return x == other.x && y == other.y && z == other.z;
   }
 
-  ChunkPosition operator+(const ChunkPosition &other) const {
+  constexpr ChunkPosition operator+(const ChunkPosition &other) const noexcept {
     return ChunkPosition(x + other.x, y + other.y, z + other.z);
   }
 };
 
 namespace std {
 template <> struct hash<ChunkPosition> {
-  size_t operator()(const ChunkPosition &pos) const {
+  constexpr size_t operator()(const ChunkPosition &pos) const noexcept {
     return (static_cast<size_t>(pos.y) << 32) |
            (static_cast<size_t>(pos.z) << 16) | pos.x;
   }

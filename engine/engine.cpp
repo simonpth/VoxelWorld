@@ -2,9 +2,10 @@
 
 #include <QtCore/qmutex.h>
 #include <chrono>
+#include <memory>
 
 Engine::Engine(QObject *parent) : QObject(parent) {
-  m_world = std::make_unique<World>();
+  m_world = std::make_shared<World>();
   m_objectEngine = std::make_unique<ObjectEngine>(this);
 
   m_playerController = std::make_unique<PlayerController>(this);

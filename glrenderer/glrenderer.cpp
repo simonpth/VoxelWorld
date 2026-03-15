@@ -1,11 +1,14 @@
 #include "glrenderer.h"
 #include "chunkmesh.h"
+#include "enginecontext.h"
 #include <QtCore/qlogging.h>
 #include <QtGui/qopenglfunctions.h>
 
 GLRenderer::GLRenderer() {}
 
-GLRenderer::~GLRenderer() { delete m_program; }
+GLRenderer::~GLRenderer() {
+  delete m_program;
+}
 
 void GLRenderer::init() {
   if (!m_program) {
@@ -43,38 +46,39 @@ void GLRenderer::paint() {
   }
   m_lastFrame = now;
 
-  m_engine->playerController()->update();
+  std::shared_ptr<Engine> engine = EngineContext::instance().engine();
+
+  engine->playerController()->update();
 
   QMatrix4x4 mvp;
   mvp.perspective(60.0f,
                   m_viewportSize.width() / (float)m_viewportSize.height(), 0.1f,
                   10000.0f);
-  mvp.rotate(m_engine->playerController()->rotation().x(), 1, 0, 0);
-  mvp.rotate(m_engine->playerController()->rotation().y(), 0, 1, 0);
-  mvp.translate(-m_engine->playerController()->position());
+  mvp.rotate(engine->playerController()->rotation().x(), 1, 0, 0);
+  mvp.rotate(engine->playerController()->rotation().y(), 0, 1, 0);
+  mvp.translate(-engine->playerController()->position());
 
   // chunk updates
-  if (m_engine->playerController()->chunksToRenderDirty()) {
-    m_engine->playerController()->setChunksToRenderDirty(false);
+  auto playerChunk = engine->playerController()->currentChunk();
+
+  if (engine->playerController()->chunksToRenderDirty()) {
+    engine->playerController()->setChunksToRenderDirty(false);
     // reset the dirty flag first so that we don't miss any updates
     // that happen during this function
-    auto playerChunk = m_engine->playerController()->currentChunk();
-    auto relativeOffsets = m_engine->playerController()->relativeChunkOffsets();
+    auto relativeOffsets = engine->playerController()->relativeChunkOffsets();
 
     std::unordered_map<ChunkPosition, bool> chunksToKeep;
     for (const auto &offset : relativeOffsets) {
       for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
         auto chunkPos = ChunkPosition(playerChunk.x + offset.x, y,
                                       playerChunk.z + offset.z);
-        if (chunkPos.y < 0 || chunkPos.y >= World::CHUNKHEIGHT)
-          continue; // skip chunks that are out of vertical bounds
 
         // if the chunk isn't already in the map, create a new mesh for it
         if (m_chunkMeshes.find(chunkPos) == m_chunkMeshes.end()) {
           auto mesh = std::make_unique<ChunkMesh>();
           mesh->setup();
           mesh->setChunkPosition(chunkPos);
-          mesh->updateMeshAsync();
+          mesh->updateMeshAsync(engine->world());
           m_chunkMeshes.emplace(chunkPos, std::move(mesh));
         }
 
@@ -85,6 +89,7 @@ void GLRenderer::paint() {
     // remove chunks that are no longer in the render distance
     for (auto it = m_chunkMeshes.begin(); it != m_chunkMeshes.end();) {
       if (chunksToKeep.find(it->first) == chunksToKeep.end()) {
+        ChunkMesh::cleanupAsync(std::move(it->second));
         it = m_chunkMeshes.erase(it);
       } else {
         ++it;
@@ -105,14 +110,16 @@ void GLRenderer::paint() {
   glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   // DRAW
   m_program->setUniformValue("mvp_matrix", mvp);
 
   for (auto &[pos, mesh] : m_chunkMeshes) {
-    m_program->setUniformValue("relativeChunkPos", pos.x * Chunk::SIZE,
-                               pos.y * Chunk::SIZE, pos.z * Chunk::SIZE);
+    m_program->setUniformValue("relativeChunkPos",
+                               (pos.x - playerChunk.x) * Chunk::SIZE,
+                               (pos.y - playerChunk.y) * Chunk::SIZE,
+                               (pos.z - playerChunk.z) * Chunk::SIZE);
     mesh->render();
   }
 

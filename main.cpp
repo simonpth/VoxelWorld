@@ -4,6 +4,8 @@
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 
+#include "engine/enginecontext.h"
+
 int useQGLRenderer(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);
 
@@ -17,15 +19,22 @@ int useQGLRenderer(int argc, char *argv[]) {
 
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
-    QQmlApplicationEngine engine;
+  EngineContext::instance().createEngine();
+
+  QQmlApplicationEngine engine;
   QObject::connect(
       &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
       []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
   engine.loadFromModule("VoxelWorld", "Main");
 
-  return app.exec();
+  int result = app.exec();
+
+  EngineContext::instance().deleteEngine();
+
+  return result;
 }
 
 int main(int argc, char *argv[]) {
-  return useQGLRenderer(argc, argv);;
+  return useQGLRenderer(argc, argv);
+  ;
 }

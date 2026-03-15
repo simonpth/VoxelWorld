@@ -1,53 +1,104 @@
 #include "world.h"
-#include "chunk.h"
+#include "chunkgeneration.h"
 
-std::pair<Chunk, std::unique_ptr<uint32_t[]>> World::chunkForMesh(const ChunkPosition &pos) {
-  QReadLocker locker(&m_chunksMutex);
+// This function should only be called while holding the m_chunksMutex
+Chunk *World::chunkAtWithLoadOrGenerate(const ChunkPosition &pos) {
   auto it = m_chunks.find(pos);
   if (it == m_chunks.end()) {
-    return {Chunk(), nullptr};
+    return loadOrGenerateChunk(pos);
+  } else {
+    return it->second.get();
   }
+}
 
-  std::unique_ptr<uint32_t[]> nextChunkSolids(new uint32_t[6 * Chunk::SIZE]());
+std::unique_ptr<ChunkRenderData>
+World::requestChunkRenderData(const ChunkPosition &pos) {
+  QMutexLocker locker(&m_chunksMutex);
+  auto renderData = std::make_unique<ChunkRenderData>();
+  renderData->chunk = *(chunkAtWithLoadOrGenerate(pos));
 
-  // Helper lambda to process a face direction
-  auto processFace = [&](const ChunkPosition& offset, int baseIndex,
-                        auto blockAccess) {
-    auto nextPos = pos + offset;
-    auto nextIt = m_chunks.find(nextPos);
-    if (nextIt != m_chunks.end()) {
-      auto* chunk = nextIt->second.get();
-      for (int i = 0; i < Chunk::SIZE; ++i) {
-        for (int j = 0; j < Chunk::SIZE; ++j) {
-          nextChunkSolids[baseIndex + i] |= blockAccess(chunk, i, j) ? (1 << j) : 0;
+  // Fill in the solid masks based on the chunk's blocks
+  for (int x = 0; x < Chunk::SIZE; ++x) {
+    for (int y = 0; y < Chunk::SIZE; ++y) {
+      for (int z = 0; z < Chunk::SIZE; ++z) {
+        if (renderData->chunk.block(x, y, z).isSolid()) {
+          renderData->setSolidMask(x, y, z);
         }
       }
     }
-  };
+  }
 
-  // +X face (right) - access blocks at x=0 face
-  processFace(ChunkPosition(1, 0, 0), 0,
-    [](Chunk* chunk, int y, int z) { return chunk->block(0, y, z).isSolid(); });
+  // Masks are 34x34x34 to account for neighboring blocks, so we need to check
+  // adjacent chunks
+  // Check +X neighbor
+  Chunk *neighborChunk =
+      chunkAtWithLoadOrGenerate(pos + ChunkPosition(1, 0, 0));
+  for (int y = 0; y < Chunk::SIZE; ++y) {
+    for (int z = 0; z < Chunk::SIZE; ++z) {
+      if (neighborChunk->block(0, y, z).isSolid()) {
+        renderData->setSolidMask(Chunk::SIZE, y, z); // +X face
+      }
+    }
+  }
+  // Check +Y neighbor
+  Chunk *neighborChunkY =
+      chunkAtWithLoadOrGenerate(pos + ChunkPosition(0, 1, 0));
+  for (int z = 0; z < Chunk::SIZE; ++z) {
+    for (int x = 0; x < Chunk::SIZE; ++x) {
+      if (neighborChunkY->block(x, 0, z).isSolid()) {
+        renderData->setSolidMask(x, Chunk::SIZE, z); // +Y face
+      }
+    }
+  }
+  // Check +Z neighbor
+  Chunk *neighborChunkZ =
+      chunkAtWithLoadOrGenerate(pos + ChunkPosition(0, 0, 1));
+  for (int y = 0; y < Chunk::SIZE; ++y) {
+    for (int x = 0; x < Chunk::SIZE; ++x) {
+      if (neighborChunkZ->block(x, y, 0).isSolid()) {
+        renderData->setSolidMask(x, y, Chunk::SIZE); // +Z face
+      }
+    }
+  }
+  // Check -X neighbor
+  const Chunk *neighborChunkNegX =
+      chunkAtWithLoadOrGenerate(pos + ChunkPosition(-1, 0, 0));
+  for (int y = 0; y < Chunk::SIZE; ++y) {
+    for (int z = 0; z < Chunk::SIZE; ++z) {
+      if (neighborChunkNegX->block(Chunk::SIZE - 1, y, z).isSolid()) {
+        renderData->setSolidMask(-1, y, z); // -X face
+      }
+    }
+  }
 
-  // +Y face (top) - access blocks at y=0 face
-  processFace(ChunkPosition(0, 1, 0), Chunk::SIZE,
-    [](Chunk* chunk, int z, int x) { return chunk->block(x, 0, z).isSolid(); });
+  // Check -Y neighbor
+  const Chunk *neighborChunkNegY =
+      chunkAtWithLoadOrGenerate(pos + ChunkPosition(0, -1, 0));
+  for (int z = 0; z < Chunk::SIZE; ++z) {
+    for (int x = 0; x < Chunk::SIZE; ++x) {
+      if (neighborChunkNegY->block(x, Chunk::SIZE - 1, z).isSolid()) {
+        renderData->setSolidMask(x, -1, z); // -Y face
+      }
+    }
+  }
+  // Check -Z neighbor
+  const Chunk *neighborChunkNegZ =
+      chunkAtWithLoadOrGenerate(pos + ChunkPosition(0, 0, -1));
+  for (int y = 0; y < Chunk::SIZE; ++y) {
+    for (int x = 0; x < Chunk::SIZE; ++x) {
+      if (neighborChunkNegZ->block(x, y, Chunk::SIZE - 1).isSolid()) {
+        renderData->setSolidMask(x, y, -1); // -Z face
+      }
+    }
+  }
 
-  // +Z face (front) - access blocks at z=0 face
-  processFace(ChunkPosition(0, 0, 1), 2 * Chunk::SIZE,
-    [](Chunk* chunk, int y, int x) { return chunk->block(x, y, 0).isSolid(); });
+  return std::move(renderData);
+}
 
-  // -X face (left) - access blocks at x=SIZE-1 face
-  processFace(ChunkPosition(-1, 0, 0), 3 * Chunk::SIZE,
-    [](Chunk* chunk, int y, int z) { return chunk->block(Chunk::SIZE-1, y, z).isSolid(); });
-
-  // -Y face (bottom) - access blocks at y=SIZE-1 face
-  processFace(ChunkPosition(0, -1, 0), 4 * Chunk::SIZE,
-    [](Chunk* chunk, int z, int x) { return chunk->block(x, Chunk::SIZE-1, z).isSolid(); });
-
-  // -Z face (back) - access blocks at z=SIZE-1 face
-  processFace(ChunkPosition(0, 0, -1), 5 * Chunk::SIZE,
-    [](Chunk* chunk, int y, int x) { return chunk->block(x, y, Chunk::SIZE-1).isSolid(); });
-
-  return std::make_pair(*(it->second), std::move(nextChunkSolids));
+// This function should only be called while holding the m_chunksMutex
+Chunk *World::loadOrGenerateChunk(const ChunkPosition &pos) {
+  if (m_chunks.find(pos) == m_chunks.end()) {
+    m_chunks[pos] = ChunkGeneration::generateChunk(pos);
+  }
+  return m_chunks[pos].get();
 }

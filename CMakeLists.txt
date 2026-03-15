@@ -17,12 +17,14 @@ qt_add_qml_module(appVoxelWorld
     URI VoxelWorld
     VERSION 1.0
     QML_FILES
-        qml/GameWindow.qml
         qml/Main.qml
+        glrenderer/GameWindow.qml
     SOURCES
         engine/constants.h
+        engine/chunkgeneration.h engine/chunkgeneration.cpp
         engine/engine.h engine/engine.cpp
         engine/enginecontext.h engine/enginecontext.cpp
+        engine/engineqml.h
         engine/object.h
         engine/playercontroller.h engine/playercontroller.cpp
         engine/objectengine.h engine/objectengine.cpp
@@ -31,7 +33,7 @@ qt_add_qml_module(appVoxelWorld
         glrenderer/glquickitem.h glrenderer/glquickitem.cpp
         glrenderer/glrenderer.h glrenderer/glrenderer.cpp
         glrenderer/chunkmesh.h glrenderer/chunkmesh.cpp
-        qml/helper.h
+        glrenderer/helper.h
     RESOURCES
         shaders/shader.vert
         shaders/shader.frag

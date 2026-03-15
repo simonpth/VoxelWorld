@@ -2,12 +2,14 @@
 #define CHUNKMESH_H
 
 #include "engine/chunk.h"
+#include "engine/world.h"
 
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLVertexArrayObject>
 #include <QReadWriteLock>
 #include <atomic>
+#include <memory>
 #include <vector>
 #include <cstdint>
 
@@ -22,9 +24,11 @@ public:
   void setChunkPosition(const ChunkPosition &pos) { m_chunkPosition = pos; }
   ChunkPosition chunkPosition() const { return m_chunkPosition; }
 
-  void updateMeshAsync();
+  void updateMeshAsync(std::shared_ptr<World> world);
 
   void render();
+
+  static void cleanupAsync(std::unique_ptr<ChunkMesh> mesh);
 
 private:
   QOpenGLBuffer m_vbo;
@@ -38,6 +42,9 @@ private:
   std::atomic<bool> m_ready = false;
 
   ChunkPosition m_chunkPosition;
+
+  QMutex m_updateMeshMutex;
+  std::atomic<int> m_uses = 0;
 };
 
 #endif // CHUNKMESH_H

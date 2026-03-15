@@ -5,7 +5,6 @@
 
 #include "chunk.h"
 #include "chunkmesh.h"
-#include "engine/engine.h"
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
@@ -19,7 +18,6 @@
 class GLRenderer : public QObject, protected QOpenGLFunctions {
   Q_OBJECT
   QML_ELEMENT
-  Q_PROPERTY(Engine *engine WRITE setEngine)
   Q_PROPERTY(int fps READ fps)
 public:
   GLRenderer();
@@ -28,8 +26,6 @@ public:
   void setViewportSize(const QSize &size) { m_viewportSize = size; }
   void setWindow(QQuickWindow *window) { m_window = window; }
 
-  void setEngine(Engine *engine) { m_engine = engine; }
-
   int fps() const { return m_fps; }
 
 public slots:
@@ -37,7 +33,6 @@ public slots:
   void paint();
 
 private:
-  Engine *m_engine = nullptr;
   int m_fps = 0;
 
   QSize m_viewportSize;

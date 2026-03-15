@@ -20,8 +20,7 @@ struct Block {
            0x07; // Shift right by 5 and mask with 0x07 (00000111 in binary)
   }
 
-  static constexpr uint16_t NON_SOLID_MASK = 0x8000;
-  bool isSolid() const noexcept { return (id & NON_SOLID_MASK) == 0; }
+  bool isSolid() const noexcept { return id != 0; }
 };
 
 #endif // BLOCK_H
