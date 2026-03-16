@@ -6,7 +6,7 @@
 
 #include "engine/enginecontext.h"
 
-int useQGLRenderer(int argc, char *argv[]) {
+int useQmlGLRenderer(int argc, char *argv[]) {
   QGuiApplication app(argc, argv);
 
   QSurfaceFormat format;
@@ -35,6 +35,6 @@ int useQGLRenderer(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  return useQGLRenderer(argc, argv);
+  return useQmlGLRenderer(argc, argv);
   ;
 }

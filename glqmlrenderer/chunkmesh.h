@@ -16,6 +16,7 @@
 class ChunkMesh : protected QOpenGLFunctions {
 public:
   ChunkMesh();
+  ~ChunkMesh();
 
   bool isReady() const { return m_ready.load(); }
 

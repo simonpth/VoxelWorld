@@ -30,10 +30,10 @@ qt_add_qml_module(appVoxelWorld
         engine/objectengine.h engine/objectengine.cpp
         engine/world.h engine/world.cpp engine/chunk.h engine/block.h
 
-        glrenderer/glquickitem.h glrenderer/glquickitem.cpp
-        glrenderer/glrenderer.h glrenderer/glrenderer.cpp
-        glrenderer/chunkmesh.h glrenderer/chunkmesh.cpp
-        glrenderer/helper.h
+        glqmlrenderer/glquickitem.h glqmlrenderer/glquickitem.cpp
+        glqmlrenderer/glrenderer.h glqmlrenderer/glrenderer.cpp
+        glqmlrenderer/chunkmesh.h glqmlrenderer/chunkmesh.cpp
+        glqmlrenderer/helper.h
     RESOURCES
         shaders/shader.vert
         shaders/shader.frag
@@ -48,7 +48,7 @@ set_target_properties(appVoxelWorld PROPERTIES
 
 target_include_directories(appVoxelWorld PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/engine
-    ${CMAKE_CURRENT_SOURCE_DIR}/glrenderer
+    ${CMAKE_CURRENT_SOURCE_DIR}/glqmlrenderer
     ${CMAKE_CURRENT_SOURCE_DIR}/qmlrenderer
     ${CMAKE_CURRENT_SOURCE_DIR}/qml
 )

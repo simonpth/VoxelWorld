@@ -17,7 +17,7 @@ Item {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        // cursorShape: root.focused ? Qt.BlankCursor : Qt.ArrowCursor
+        cursorShape: root.focused ? Qt.BlankCursor : Qt.ArrowCursor
 
         onPressed: {
             if (!root.focused) {

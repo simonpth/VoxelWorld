@@ -7,6 +7,11 @@
 
 ChunkMesh::ChunkMesh() : QOpenGLFunctions(QOpenGLContext::currentContext()) {}
 
+ChunkMesh::~ChunkMesh() {
+  m_vao.destroy();
+  m_vbo.destroy();
+}
+
 void ChunkMesh::setup() {
   m_vao.create();
   m_vao.bind();
@@ -165,7 +170,5 @@ void ChunkMesh::cleanupAsync(std::unique_ptr<ChunkMesh> mesh) {
     while (mesh->m_uses.load() > 0) {
       QThread::msleep(100);
     }
-    mesh->m_vao.destroy();
-    mesh->m_vbo.destroy();
   });
 }

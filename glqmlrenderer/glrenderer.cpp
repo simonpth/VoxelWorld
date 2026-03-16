@@ -7,6 +7,11 @@
 GLRenderer::GLRenderer() {}
 
 GLRenderer::~GLRenderer() {
+  auto it = m_chunkMeshes.begin();
+  while (it != m_chunkMeshes.end()) {
+    ChunkMesh::cleanupAsync(std::move(it->second));
+    it = m_chunkMeshes.erase(it);
+  }
   delete m_program;
 }
 

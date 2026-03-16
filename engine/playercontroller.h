@@ -38,7 +38,7 @@ struct PlayerChunkPos {
   }
 };
 
-static const float PLAYER_SPEED = 100.0f; // units per second
+static const float PLAYER_SPEED = 20.0f; // units per second
 
 class PlayerController : public QObject {
   Q_OBJECT
