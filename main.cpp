@@ -36,5 +36,4 @@ int useQmlGLRenderer(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   return useQmlGLRenderer(argc, argv);
-  ;
 }
