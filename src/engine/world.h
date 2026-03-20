@@ -2,12 +2,12 @@
 #define WORLD_H
 
 #include "chunk.h"
-#include <QMutex>
+#include <QReadWriteLock>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 
-struct ChunkRenderData {
+struct ChunkMeshingData {
   Chunk chunk;
   uint64_t xSolidMasks[Chunk::AREA]; // 32*32 = 1024
   uint64_t ySolidMasks[Chunk::AREA];
@@ -36,7 +36,7 @@ struct ChunkRenderData {
     }
   }
 
-  ChunkRenderData() {
+  ChunkMeshingData() {
     for (int i = 0; i < Chunk::AREA; ++i) {
       xSolidMasks[i] = 0;
       ySolidMasks[i] = 0;
@@ -45,21 +45,24 @@ struct ChunkRenderData {
   }
 };
 
+struct ChunkFaceData {
+  std::vector<uint64_t> vertices;
+  uint32_t faceVertexCounts[6]; // Number of vertices for each face direction
+};
+
 class World {
 public:
   static constexpr int CHUNKHEIGHT = 8;
 
   World() = default;
 
-  Chunk *chunkAtWithLoadOrGenerate(const ChunkPosition &pos);
+  std::unique_ptr<ChunkMeshingData>
+  requestChunkMeshingData(const ChunkPosition &pos);
 
-  std::unique_ptr<ChunkRenderData>
-  requestChunkRenderData(const ChunkPosition &pos);
-
-  Chunk *loadOrGenerateChunk(const ChunkPosition &pos);
+  void loadOrGenerateChunk(const ChunkPosition &pos);
 
 private:
-  QMutex m_chunksMutex;
+  QReadWriteLock m_chunksLock;
   std::unordered_map<ChunkPosition, std::unique_ptr<Chunk>> m_chunks;
 };
 

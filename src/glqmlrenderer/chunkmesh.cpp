@@ -8,8 +8,14 @@
 ChunkMesh::ChunkMesh() : QOpenGLFunctions(QOpenGLContext::currentContext()) {}
 
 ChunkMesh::~ChunkMesh() {
+  /*
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning() << "ChunkMesh destructor called without a current OpenGL
+  context!"; return;
+  }
   m_vao.destroy();
   m_vbo.destroy();
+  */
 }
 
 void ChunkMesh::setup() {
@@ -45,7 +51,7 @@ void ChunkMesh::updateMeshAsync(std::shared_ptr<World> world) {
 
     std::vector<uint64_t> newVertices;
 
-    auto renderData = world->requestChunkRenderData(m_chunkPosition);
+    auto renderData = world->requestChunkMeshingData(m_chunkPosition);
     Chunk *chunk = &renderData->chunk;
 
     // X face
@@ -154,13 +160,15 @@ void ChunkMesh::render() {
     m_newAllocRequired.store(false);
   }
 
-  glEnableVertexAttribArray(0);
-  glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
-  glVertexAttribDivisor(0, 1);
+  if (!m_vertices.empty()) {
+    glEnableVertexAttribArray(0);
+    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
+    glVertexAttribDivisor(0, 1);
 
-  m_vao.bind();
-  glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, m_uploadedVertexCount);
-  m_vao.release();
+    m_vao.bind();
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, m_uploadedVertexCount);
+    m_vao.release();
+  }
 
   m_uses.fetch_sub(1);
 }

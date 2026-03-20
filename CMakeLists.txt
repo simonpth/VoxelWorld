@@ -1,69 +1,47 @@
 cmake_minimum_required(VERSION 3.20)
-
-project(VoxelWorld VERSION 0.1 LANGUAGES CXX)
+project(VoxelWorld VERSION 0.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Qml Quick)
+# Add source file
+set(SOURCES
+    src/main.cpp
 
-qt_standard_project_setup(REQUIRES 6.8)
-
-qt_add_executable(appVoxelWorld
-    main.cpp
+    src/glfwrenderer/window.h
+    src/glfwrenderer/window.cpp
+    src/glfwrenderer/shader.h
+    src/glfwrenderer/shader.cpp
 )
 
-qt_add_qml_module(appVoxelWorld
-    URI VoxelWorld
-    VERSION 1.0
-    QML_FILES
-        qml/Main.qml
-        glqmlrenderer/GameWindow.qml
-    SOURCES
-        engine/constants.h
-        engine/chunkgeneration.h engine/chunkgeneration.cpp
-        engine/engine.h engine/engine.cpp
-        engine/enginecontext.h engine/enginecontext.cpp
-        engine/engineqml.h
-        engine/object.h
-        engine/playercontroller.h engine/playercontroller.cpp
-        engine/objectengine.h engine/objectengine.cpp
-        engine/world.h engine/world.cpp engine/chunk.h engine/block.h
+# Create the executable
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-        glqmlrenderer/glquickitem.h glqmlrenderer/glquickitem.cpp
-        glqmlrenderer/glrenderer.h glqmlrenderer/glrenderer.cpp
-        glqmlrenderer/chunkmesh.h glqmlrenderer/chunkmesh.cpp
-        glqmlrenderer/helper.h
-    RESOURCES
-        shaders/shader.vert
-        shaders/shader.frag
+# glad
+target_sources(${PROJECT_NAME} PRIVATE lib/glad/src/glad.c)
+target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
+
+
+# Link libraries
+find_package(glfw3 3.3 REQUIRED)
+find_package(OpenGL REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    glfw
+    OpenGL::GL
 )
 
-set_target_properties(appVoxelWorld PROPERTIES
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+target_include_directories(${PROJECT_NAME} PRIVATE
+    src
 )
 
-target_include_directories(appVoxelWorld PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/engine
-    ${CMAKE_CURRENT_SOURCE_DIR}/glqmlrenderer
-    ${CMAKE_CURRENT_SOURCE_DIR}/qmlrenderer
-    ${CMAKE_CURRENT_SOURCE_DIR}/qml
+# Copy shaders next to the executable after build.
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
 )
 
-target_link_libraries(appVoxelWorld
-    PRIVATE
-        Qt6::Core
-        Qt6::Gui
-        Qt6::Qml
-        Qt6::Quick
-)
-
-include(GNUInstallDirs)
-install(TARGETS appVoxelWorld
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(APPLE)
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-framework Cocoa" "-framework IOKit")
+endif()

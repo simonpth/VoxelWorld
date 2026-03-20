@@ -4,14 +4,15 @@
 #include "engine/chunk.h"
 #include "engine/world.h"
 
+#include <QMutex>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLVertexArrayObject>
 #include <QReadWriteLock>
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <vector>
-#include <cstdint>
 
 class ChunkMesh : protected QOpenGLFunctions {
 public:
