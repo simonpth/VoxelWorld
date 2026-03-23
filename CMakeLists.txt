@@ -8,10 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     src/main.cpp
 
-    src/glfwrenderer/window.h
-    src/glfwrenderer/window.cpp
+    src/glfwrenderer/chunkmesh.h
+    src/glfwrenderer/chunkmesh.cpp
     src/glfwrenderer/shader.h
     src/glfwrenderer/shader.cpp
+    src/glfwrenderer/window.h
+    src/glfwrenderer/window.cpp
 )
 
 # Create the executable
@@ -21,6 +23,9 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE lib/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
 
+# GLM
+add_subdirectory(lib/glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
 # Link libraries
 find_package(glfw3 3.3 REQUIRED)
