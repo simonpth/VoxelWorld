@@ -1,9 +1,70 @@
 #include "chunkmesh.h"
 
-ChunkMesh::ChunkMesh() {
-    // Constructor implementation (if needed)
+ChunkMesh::ChunkMesh()
+{
+  // Constructor implementation (if needed)
 }
 
-ChunkMesh::~ChunkMesh() {
-    // Destructor implementation (if needed)
+ChunkMesh::~ChunkMesh()
+{
+  // Destructor implementation (if needed)
+}
+
+uint64_t generateVertex(int id, int x, int y, int z, int width, int height,
+                        int rotation)
+{
+  return ((static_cast<uint64_t>(id) & 0xFFFF) << 48) |
+         ((static_cast<uint64_t>(x) & 0xFF) << 40) |
+         ((static_cast<uint64_t>(y) & 0xFF) << 32) |
+         ((static_cast<uint64_t>(z) & 0xFF) << 24) |
+         ((static_cast<uint64_t>(width) & 0xFF) << 16) |
+         ((static_cast<uint64_t>(height) & 0xFF) << 8) |
+         ((static_cast<uint64_t>(rotation) & 0x1F) << 3);
+}
+
+void ChunkMesh::updateVertices()
+{
+  std::vector<uint64_t> newVertices;
+
+  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 0));
+  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 1));
+  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 2));
+  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 3));
+  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 4));
+  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 5));
+
+  std::unique_lock lock(m_verticesMutex);
+  m_vertices.swap(newVertices);
+}
+
+void ChunkMesh::initialize()
+{
+  glGenBuffers(1, &m_vbo);
+  glGenVertexArrays(1, &m_vao);
+
+  glBindVertexArray(m_vao);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
+  glVertexAttribDivisor(0, 1);
+
+  glBindVertexArray(0);
+}
+
+void ChunkMesh::uploadVertices()
+{
+  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+  std::shared_lock lock(m_verticesMutex);
+  glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(uint64_t),
+               m_vertices.data(), GL_STATIC_DRAW);
+}
+
+void ChunkMesh::render()
+{
+  if (m_vertices.empty())
+    return;
+
+  glBindVertexArray(m_vao);
+  glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, m_vertices.size());
+  glBindVertexArray(0);
 }

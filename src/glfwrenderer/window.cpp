@@ -70,5 +70,6 @@ void Window::mainLoop()
 void Window::cleanup()
 {
   glfwDestroyWindow(m_window);
+  m_window = nullptr;
   glfwTerminate();
 }

@@ -27,14 +27,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
 add_subdirectory(lib/glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
-# Link libraries
-find_package(glfw3 3.3 REQUIRED)
-find_package(OpenGL REQUIRED)
+# GLFW
+add_subdirectory(lib/glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    glfw
-    OpenGL::GL
-)
+# OpenGL
+find_package(OpenGL REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     src
