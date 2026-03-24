@@ -1,5 +1,5 @@
 #version 330 core
-// layout(location = 0) in uvec2 data;
+layout(location = 0) in uvec2 data;
 
 uniform vec3 relativeChunkPos;
 uniform mat4 mvp;
@@ -47,14 +47,14 @@ const int indices[24] = int[](
   0, 4, 1, 5  // 5: -z
 );
 
-const vec3 debugVertices[3] = vec3[](
+const vec3 debugVertices[4] = vec3[](
   vec3(-0.5f, -0.5f, 0.0f),
   vec3(0.5f, -0.5f, 0.0f),
-  vec3(0.0f,  0.5f, 0.0f)
+  vec3(0.0f,  0.5f, 0.0f),
+  vec3(-0.5f,  -0.5f, 0.0f)
 );
 
 void main() {
-  /*
   uint blockID = data.y >> 16;
   uint x = (data.y >> 8) & 0xFFu;
   uint y = data.y & 0xFFu;
@@ -65,9 +65,7 @@ void main() {
 
   vec3 facePos = cornors[indices[rotation * 4u + uint(gl_VertexID % 4)]];
   gl_Position = mvp * vec4(facePos + vec3(x, y, z) / 8 + relativeChunkPos, 1.0);
-  */
 
-  gl_Position = vec4(debugVertices[gl_VertexID], 1.0);
-  blockIdShared = 1u;
-  rotationShared = 1u;
+  blockIdShared = blockID;
+  rotationShared = rotation;
 }

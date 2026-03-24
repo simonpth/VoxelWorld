@@ -63,14 +63,19 @@ void ChunkMesh::updateVerticesIfNeeded()
 
 void ChunkMesh::initialize()
 {
-  glGenBuffers(1, &m_vbo);
   glGenVertexArrays(1, &m_vao);
+  glGenBuffers(1, &m_vbo);
 
   glBindVertexArray(m_vao);
 
-  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+  glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+
   glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, sizeof(uint64_t), (void *)0);
   glVertexAttribDivisor(0, 1);
+  glEnableVertexAttribArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glBindVertexArray(0);
 }

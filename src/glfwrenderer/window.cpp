@@ -51,8 +51,6 @@ bool Window::initialize()
 
 void Window::mainLoop()
 {
-  // GLint chunkMVPLocation = m_shader->uniformLocation("mvp");
-  // GLint relativeChunkPosLocation = m_shader->uniformLocation("relativeChunkPos");
   while (!glfwWindowShouldClose(m_window))
   {
     processInput();
@@ -71,7 +69,8 @@ void Window::mainLoop()
       {
         int fps = static_cast<int>(m_frameCountSinceLastFpsUpdate * 1000 / fpsDelta.count());
         m_frameCountSinceLastFpsUpdate = 0;
-        glfwSetWindowTitle(m_window, ("Voxel World - FPS: " + std::to_string(fps)).c_str());
+        glm::vec3 playerPos = m_playerController.worldPosition();
+        glfwSetWindowTitle(m_window, ("Voxel World - FPS: " + std::to_string(fps) + " pos: " + std::to_string(playerPos.x) + ", " + std::to_string(playerPos.y) + ", " + std::to_string(playerPos.z)).c_str());
         m_lastFpsUpdate = now;
       }
     }
@@ -95,7 +94,7 @@ void Window::mainLoop()
     glm::mat4 mvp = projection * view;
 
     // if the player's current chunk or render distance has changed, update the list of chunks to render
-    if (m_playerController.chunksToRenderDirty() && false) // DEBUG: disable chunk loading
+    if (m_playerController.chunksToRenderDirty())
     {
       m_playerController.setChunksToRenderDirty(false);
       // reset the dirty flag first so that we don't miss any updates
@@ -145,18 +144,16 @@ void Window::mainLoop()
 
     m_shader->use();
 
-    // m_shader->setMat4(chunkMVPLocation, mvp);
+    m_shader->setMat4("mvp", mvp);
 
     for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes)
     {
       float relativeX = (chunkPos.x - playerChunkPos.x) * Chunk::SIZE;
       float relativeY = (chunkPos.y - playerChunkPos.y) * Chunk::SIZE;
       float relativeZ = (chunkPos.z - playerChunkPos.z) * Chunk::SIZE;
-      // m_shader->setVec3(relativeChunkPosLocation, relativeX, relativeY, relativeZ);
+      m_shader->setVec3("relativeChunkPos", relativeX, relativeY, relativeZ);
       chunkMesh->render();
     }
-
-    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -182,5 +179,5 @@ void Window::processInput()
   m_inputState.moveLeft = glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS;
   m_inputState.moveRight = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
   m_inputState.moveUp = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
-  m_inputState.moveDown = glfwGetKey(m_window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+  m_inputState.moveDown = glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 }
