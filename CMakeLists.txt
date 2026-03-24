@@ -19,17 +19,42 @@ set(SOURCES
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+include(FetchContent)
+
+set(CMAKE_POLICY_VERSION_MINIMUM 3.20)
+
+# enkiTS - task scheduler
+FetchContent_Declare(
+  enkiTS
+  GIT_REPOSITORY https://github.com/dougbinks/enkiTS.git
+  GIT_TAG        v1.11
+)
+
+# GLFW - windowing
+FetchContent_Declare(
+  glfw
+  GIT_REPOSITORY https://github.com/glfw/glfw.git
+  GIT_TAG        3.4
+)
+
+# GLM - math
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG        1.0.3
+)
+
+FetchContent_MakeAvailable(enkiTS glfw glm)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  enkiTS
+  glfw
+  glm
+)
+
 # glad
 target_sources(${PROJECT_NAME} PRIVATE lib/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
-
-# GLM
-add_subdirectory(lib/glm)
-target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
-
-# GLFW
-add_subdirectory(lib/glfw)
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 
 # OpenGL
 find_package(OpenGL REQUIRED)

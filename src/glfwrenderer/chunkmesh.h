@@ -24,6 +24,7 @@ private:
 
   std::shared_mutex m_verticesMutex;
   std::vector<uint64_t> m_vertices;
+  bool m_needsUpload = false;
 };
 
 #endif // CHUNKMESH_H

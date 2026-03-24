@@ -1,5 +1,7 @@
 #include "chunkmesh.h"
 
+#include <GLFW/glfw3.h>
+
 ChunkMesh::ChunkMesh()
 {
   // Constructor implementation (if needed)
@@ -7,7 +9,20 @@ ChunkMesh::ChunkMesh()
 
 ChunkMesh::~ChunkMesh()
 {
-  // Destructor implementation (if needed)
+  // check for active OpenGL context before deleting buffers
+  if (glfwGetCurrentContext() != nullptr)
+  {
+    if (m_vbo != 0)
+    {
+      glDeleteBuffers(1, &m_vbo);
+      m_vbo = 0;
+    }
+    if (m_vao != 0)
+    {
+      glDeleteVertexArrays(1, &m_vao);
+      m_vao = 0;
+    }
+  }
 }
 
 uint64_t generateVertex(int id, int x, int y, int z, int width, int height,
@@ -35,6 +50,7 @@ void ChunkMesh::updateVertices()
 
   std::unique_lock lock(m_verticesMutex);
   m_vertices.swap(newVertices);
+  m_needsUpload = true;
 }
 
 void ChunkMesh::initialize()
@@ -61,6 +77,14 @@ void ChunkMesh::uploadVertices()
 
 void ChunkMesh::render()
 {
+  std::shared_lock lock(m_verticesMutex);
+
+  if (m_needsUpload)
+  {
+    uploadVertices();
+    m_needsUpload = false;
+  }
+
   if (m_vertices.empty())
     return;
 
