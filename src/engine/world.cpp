@@ -1,7 +1,5 @@
 #include "world.h"
-#include "chunk.h"
 #include "chunkgeneration.h"
-#include <QtCore/qreadwritelock.h>
 
 std::unique_ptr<ChunkMeshingData>
 World::requestChunkMeshingData(const ChunkPosition &pos) {
@@ -15,7 +13,7 @@ World::requestChunkMeshingData(const ChunkPosition &pos) {
   loadOrGenerateChunk(pos + ChunkPosition(0, 0, -1));
 
   // Now we can safely read the chunk data
-  QReadLocker locker(&m_chunksLock);
+  std::shared_lock lock(m_chunksMutex);
   auto meshingData = std::make_unique<ChunkMeshingData>();
 
   meshingData->chunk = *m_chunks[pos];
@@ -96,12 +94,12 @@ World::requestChunkMeshingData(const ChunkPosition &pos) {
 }
 
 void World::loadOrGenerateChunk(const ChunkPosition &pos) {
-  QReadLocker readLocker(&m_chunksLock);
+  std::shared_lock lock(m_chunksMutex);
   if (m_chunks.find(pos) != m_chunks.end())
     return; // Chunk already exists, no need to generate
-  readLocker.unlock();
+  lock.unlock();
 
-  QWriteLocker locker(&m_chunksLock);
+  std::unique_lock uniqueLock(m_chunksMutex);
   if (m_chunks.find(pos) == m_chunks.end()) {
     m_chunks[pos] = ChunkGeneration::generateChunk(pos);
   }

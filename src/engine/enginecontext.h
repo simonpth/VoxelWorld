@@ -3,17 +3,15 @@
 
 #include "engine.h"
 
-#include <QObject>
-#include <QThread>
-#include <QtCore/qreadwritelock.h>
 #include <memory>
-#include <qqmlintegration.h>
+#include <shared_mutex>
+#include <thread>
 
 class EngineContext {
 public:
   static EngineContext &instance();
 
-  void createEngine();
+  std::thread createEngine();
   void deleteEngine();
 
   std::shared_ptr<Engine> engine();
@@ -21,11 +19,8 @@ public:
 private:
   EngineContext() = default;
 
-  QReadWriteLock m_lock;
+  std::shared_mutex m_engineMutex;
   std::shared_ptr<Engine> m_engine;
-  std::unique_ptr<QThread> m_engineThread;
-
-  bool m_isEngineCreated = false;
 
   EngineContext(const EngineContext &) = delete;
   EngineContext &operator=(const EngineContext &) = delete;

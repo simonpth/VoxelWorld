@@ -2,10 +2,10 @@
 #define WORLD_H
 
 #include "chunk.h"
-#include <QReadWriteLock>
-#include <cstdint>
+
 #include <memory>
 #include <unordered_map>
+#include <shared_mutex>
 
 struct ChunkMeshingData {
   Chunk chunk;
@@ -62,7 +62,7 @@ public:
   void loadOrGenerateChunk(const ChunkPosition &pos);
 
 private:
-  QReadWriteLock m_chunksLock;
+  std::shared_mutex m_chunksMutex;
   std::unordered_map<ChunkPosition, std::unique_ptr<Chunk>> m_chunks;
 };
 

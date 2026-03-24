@@ -6,28 +6,30 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add source file
 set(SOURCES
-    src/main.cpp
+  src/main.cpp
 
-    src/glfwrenderer/chunkmesh.h
-    src/glfwrenderer/chunkmesh.cpp
-    src/glfwrenderer/shader.h
-    src/glfwrenderer/shader.cpp
-    src/glfwrenderer/window.h
-    src/glfwrenderer/window.cpp
+  src/glfwrenderer/chunkmesh.cpp
+  src/glfwrenderer/window.cpp
+
+  src/engine/chunkgeneration.cpp
+  src/engine/engine.cpp
+  src/engine/enginecontext.cpp
+  src/engine/objectengine.cpp
+  src/engine/playercontroller.cpp
+  src/engine/world.cpp
 )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+# Fetch dependencies
 include(FetchContent)
-
-set(CMAKE_POLICY_VERSION_MINIMUM 3.20)
 
 # enkiTS - task scheduler
 FetchContent_Declare(
   enkiTS
   GIT_REPOSITORY https://github.com/dougbinks/enkiTS.git
-  GIT_TAG        v1.11
+  GIT_TAG        master
 )
 
 # GLFW - windowing
@@ -43,6 +45,13 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/g-truc/glm.git
   GIT_TAG        1.0.3
 )
+
+set(CMAKE_POLICY_VERSION_MINIMUM 3.20)
+set(ENKITS_BUILD_C_INTERFACE OFF CACHE BOOL "" FORCE)
+set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLM_ENABLE_CXX_20 ON CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS   OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL      OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(enkiTS glfw glm)
 

@@ -1,21 +1,16 @@
 #ifndef PLAYERCONTROLLER_H
 #define PLAYERCONTROLLER_H
 
-#include <QtCore/qreadwritelock.h>
-#include <QtGui/qvectornd.h>
 #include <atomic>
 #include <chrono>
 #include <vector>
+#include <shared_mutex>
+#include <mutex>
 
-#include <QDebug>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QObject>
-#include <QReadWriteLock>
-#include <QVector3D>
-#include <qqmlintegration.h>
+#include <glm/glm.hpp>
 
 #include "chunk.h"
+#include "playerchunkpos.h"
 
 struct PlayerControllerInput {
   bool moveForward = false;
@@ -27,66 +22,45 @@ struct PlayerControllerInput {
   bool jump = false;
 };
 
-struct PlayerChunkPos {
-  int16_t x, y, z;
-
-  PlayerChunkPos(int16_t x = 0, int16_t y = 0, int16_t z = 0)
-      : x(x), y(y), z(z) {}
-
-  bool operator==(const PlayerChunkPos &other) const {
-    return x == other.x && y == other.y && z == other.z;
-  }
-};
-
-static const float PLAYER_SPEED = 20.0f; // units per second
-
-class PlayerController : public QObject {
-  Q_OBJECT
-  QML_ELEMENT
-  Q_PROPERTY(QVector3D position READ worldPosition)
-  Q_PROPERTY(PlayerChunkPos currentChunk READ currentChunk)
-  Q_PROPERTY(QVector3D rotation READ rotation)
-  Q_PROPERTY(int renderDistance READ renderDistance WRITE setRenderDistance
-                 NOTIFY renderDistanceChanged)
-
+class PlayerController {
 public:
-  PlayerController(QObject *parent = nullptr);
+  PlayerController();
 
-  Q_INVOKABLE void keyPressed(const int &key);
-  Q_INVOKABLE void keyReleased(const int &key);
-  Q_INVOKABLE void mouseMoved(const float &deltaX, const float &deltaY);
+  void keyPressed(const int &key);
+  void keyReleased(const int &key);
+  void mouseMoved(const float &deltaX, const float &deltaY);
 
   void update();
-  QVector3D calculateDirection();
-  void move(QVector3D delta);
+  glm::vec3 calculateDirection();
+  void move(glm::vec3 delta);
 
-  QVector3D position() {
-    QReadLocker locker(&m_positionMutex);
+  glm::vec3 position() {
+    std::shared_lock lock(m_positionMutex);
     return m_position;
   }
   void setPosition(int x, int y, int z) {
-    QWriteLocker locker(&m_positionMutex);
-    m_position = QVector3D(x%Chunk::SIZE, y%Chunk::SIZE, z%Chunk::SIZE);
+    std::unique_lock lock(m_positionMutex);
+    m_position = glm::vec3(x%Chunk::SIZE, y%Chunk::SIZE, z%Chunk::SIZE);
     PlayerChunkPos newChunkPos = PlayerChunkPos(x/Chunk::SIZE, y/Chunk::SIZE, z/Chunk::SIZE);
-    QWriteLocker chunkLocker(&m_chunkMutex);
+    std::unique_lock chunkLock(m_chunkMutex);
     if(newChunkPos != m_currentChunk) {
       m_currentChunk = newChunkPos;
       m_chunksToRenderDirty.store(true);
     }
   }
-  QVector3D worldPosition() {
-    QReadLocker locker(&m_positionMutex);
-    QReadLocker chunkLocker(&m_chunkMutex);
-    return QVector3D(m_currentChunk.x * Chunk::SIZE + m_position.x(),
-                     m_currentChunk.y * Chunk::SIZE + m_position.y(),
-                     m_currentChunk.z * Chunk::SIZE + m_position.z());
+  glm::vec3 worldPosition() {
+    std::shared_lock lock(m_positionMutex);
+    std::shared_lock chunkLock(m_chunkMutex);
+    return glm::vec3(m_currentChunk.x * Chunk::SIZE + m_position.x,
+                     m_currentChunk.y * Chunk::SIZE + m_position.y,
+                     m_currentChunk.z * Chunk::SIZE + m_position.z);
   }
   PlayerChunkPos currentChunk() {
-    QReadLocker locker(&m_chunkMutex);
+    std::shared_lock lock(m_chunkMutex);
     return m_currentChunk;
   }
-  QVector3D rotation() {
-    QReadLocker locker(&m_rotationMutex);
+  glm::vec3 rotation() {
+    std::shared_lock lock(m_rotationMutex);
     return m_rotation;
   }
 
@@ -97,33 +71,45 @@ public:
     m_chunksToRenderDirty.store(dirty);
   }
   std::vector<ChunkPosition> relativeChunkOffsets() {
-    QReadLocker locker(&m_relativeChunkOffsetsMutex);
+    std::shared_lock lock(m_relativeChunkOffsetsMutex);
     return m_relativeChunkOffsets;
   }
 
-signals:
-  void renderDistanceChanged(int distance);
+  glm::vec3 front() {
+    std::shared_lock lock(m_rotationMutex);
+    float pitch = glm::radians(m_rotation.x);
+    float yaw = glm::radians(m_rotation.y);
+    return glm::normalize(glm::vec3(
+        cos(pitch) * sin(yaw),
+        sin(pitch),
+        cos(pitch) * cos(yaw)
+    ));
+  }
+
+  glm::vec3 up() {
+    return glm::vec3(0, 1, 0);
+  }
 
 private:
-  QVector3D m_position = QVector3D(3.0f, 3.0f, 3.0f);
-  QReadWriteLock m_positionMutex;
+  glm::vec3 m_position = glm::vec3(3.0f, 3.0f, 3.0f);
+  std::shared_mutex m_positionMutex;
   PlayerChunkPos m_currentChunk = PlayerChunkPos(0, 0, 0);
-  QReadWriteLock m_chunkMutex;
-  QVector3D m_velocity;
-  QReadWriteLock m_velocityMutex;
-  QVector3D m_rotation; // pitch, yaw, roll
-  QReadWriteLock m_rotationMutex;
+  std::shared_mutex m_chunkMutex;
+  glm::vec3 m_velocity;
+  std::shared_mutex m_velocityMutex;
+  glm::vec3 m_rotation; // pitch, yaw, roll
+  std::shared_mutex m_rotationMutex;
 
   PlayerControllerInput m_input;
-  QReadWriteLock m_inputMutex;
+  std::shared_mutex m_inputMutex;
 
   std::chrono::steady_clock::time_point m_lastUpdateTime;
-  QMutex m_updateMutex;
+  std::mutex m_updateMutex;
 
   std::atomic<int> m_renderDistance;
-  QMutex m_renderDistanceSetMutex;
+  std::mutex m_renderDistanceSetMutex;
   std::vector<ChunkPosition> m_relativeChunkOffsets;
-  QReadWriteLock m_relativeChunkOffsetsMutex;
+  std::shared_mutex m_relativeChunkOffsetsMutex;
   std::atomic<bool> m_chunksToRenderDirty = false;
   void calculateRelativeChunkOffsets();
 };

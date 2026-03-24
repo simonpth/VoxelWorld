@@ -25,8 +25,12 @@ ChunkMesh::~ChunkMesh()
   }
 }
 
-uint64_t generateVertex(int id, int x, int y, int z, int width, int height,
-                        int rotation)
+void ChunkMesh::requestUpdate()
+{
+  m_needsUpdate.store(true);
+}
+
+uint64_t generateVertex(int id, int x, int y, int z, int width, int height, int rotation)
 {
   return ((static_cast<uint64_t>(id) & 0xFFFF) << 48) |
          ((static_cast<uint64_t>(x) & 0xFF) << 40) |
@@ -37,8 +41,12 @@ uint64_t generateVertex(int id, int x, int y, int z, int width, int height,
          ((static_cast<uint64_t>(rotation) & 0x1F) << 3);
 }
 
-void ChunkMesh::updateVertices()
+void ChunkMesh::updateVerticesIfNeeded()
 {
+  if (!m_needsUpdate.load())
+    return;
+  m_needsUpdate.store(false);
+
   std::vector<uint64_t> newVertices;
 
   newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 0));

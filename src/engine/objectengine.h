@@ -1,12 +1,9 @@
 #ifndef OBJECTENGINE_H
 #define OBJECTENGINE_H
 
-#include <QObject>
-
-class ObjectEngine : public QObject {
-  Q_OBJECT
+class ObjectEngine {
 public:
-  ObjectEngine(QObject *parent = nullptr);
+  ObjectEngine();
 };
 
 #endif // OBJECTENGINE_H

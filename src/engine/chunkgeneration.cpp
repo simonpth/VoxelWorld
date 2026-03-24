@@ -2,6 +2,8 @@
 #include "chunk.h"
 #include "world.h"
 
+#include <cmath>
+
 // sonnet 4.6
 int perlinNoise(int x, int z, int seed = 0) {
     auto fade = [](double t) {

@@ -126,6 +126,7 @@ void GLRenderer::paint() {
                                (pos.y - playerChunk.y) * Chunk::SIZE,
                                (pos.z - playerChunk.z) * Chunk::SIZE);
     mesh->render();
+    
   }
 
   // CLEANUP FOR QML

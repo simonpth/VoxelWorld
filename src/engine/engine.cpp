@@ -1,24 +1,17 @@
 #include "engine.h"
 
-#include <QtCore/qmutex.h>
 #include <chrono>
 #include <memory>
 
-Engine::Engine(QObject *parent) : QObject(parent) {
+Engine::Engine() {
   m_world = std::make_shared<World>();
-  m_objectEngine = std::make_unique<ObjectEngine>(this);
+  m_objectEngine = std::make_unique<ObjectEngine>();
 
-  m_playerController = std::make_unique<PlayerController>(this);
-
-  m_gameLoopThread = QThread::create([this]() { gameLoop(); });
+  m_playerController = std::make_unique<PlayerController>();
 }
 
 Engine::~Engine() {
   stop();
-  if (m_gameLoopThread->isRunning()) {
-    m_gameLoopThread->quit();
-    m_gameLoopThread->wait();
-  }
 }
 
 void Engine::gameLoop() {
@@ -46,15 +39,16 @@ void Engine::gameLoop() {
 
     // Sleep remaining time if we're ahead
     auto sleepTime = tick - lag;
-    if (sleepTime > 0ms)
-      QThread::msleep(duration_cast<milliseconds>(sleepTime).count());
+    // if (sleepTime > 0ms)
+    //   sleep_for(sleepTime); --- IGNORE ---
   }
-  qDebug() << "Engine stopped.";
 }
 
 void Engine::run() {
-  m_running = true;
-  if (!m_gameLoopThread->isRunning()) {
-    m_gameLoopThread->start();
-  }
+  m_running.store(true);
+  gameLoop();
+}
+
+void Engine::stop() {
+  m_running.store(false);
 }
