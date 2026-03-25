@@ -1,4 +1,4 @@
-#include "glfwrenderer/window.h"
+#include "glfwrenderer/app.h"
 #include "engine/enginecontext.h"
 
 int main()
@@ -8,12 +8,12 @@ int main()
   if (!engineThread.joinable())
     return -1;
 
-  Window window;
-  if (!window.initialize())
+  App app;
+  if (!app.initialize())
     return -1;
 
-  window.mainLoop();
-  window.cleanup();
+  app.mainLoop();
+  app.cleanup();
 
   EngineContext::instance().deleteEngine();
   engineThread.join();

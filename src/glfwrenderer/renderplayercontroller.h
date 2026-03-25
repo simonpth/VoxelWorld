@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 #include "engine/chunk.h"
-#include "engine/playerchunkpos.h"
+#include "engine/playercontrollerinterface.h"
 
 struct RenderPlayerControllerInputState
 {
@@ -18,141 +18,132 @@ struct RenderPlayerControllerInputState
   bool jump = false;
 };
 
-class RenderPlayerController
+class RenderPlayerController : public PlayerControllerInterface
 {
 public:
   RenderPlayerController()
   {
-    setRenderDistance(4); // default render distance
     m_position = glm::vec3(0.0f, 0.0f, 0.0f);
-    m_rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
     m_currentChunk = PlayerChunkPos(0, 0, 0);
+
+    m_front = glm::vec3(0, 0, -1);
+    m_up = glm::vec3(0, 1, 0);
   }
 
-  glm::vec3 position() const { return m_position; }
-  PlayerChunkPos currentChunk() const { return m_currentChunk; }
-  glm::vec3 rotation() const { return m_rotation; }
-
-  glm::vec3 worldPosition()
+  glm::vec3 position() const override { return m_position; }
+  PlayerChunkPos currentChunk() const override { return m_currentChunk; }
+  glm::vec3 rotation() const override { return m_rotation; }
+  glm::vec3 front() const override { return m_front; }
+  glm::vec3 up() const override { return m_up; }
+  glm::vec3 worldPosition() const override
   {
     return glm::vec3(m_currentChunk.x * Chunk::SIZE + m_position.x,
                      m_currentChunk.y * Chunk::SIZE + m_position.y,
                      m_currentChunk.z * Chunk::SIZE + m_position.z);
   }
 
-  // deltaTime is in nanoseconds
-  void update(const RenderPlayerControllerInputState &inputState, std::chrono::nanoseconds deltaTime)
+  void addRotation(const glm::vec3 &rotation) override
   {
-    glm::vec3 direction(0.0f, 0.0f, 0.0f);
+    m_rotation += rotation;
 
-    if (inputState.moveForward)
-      direction += glm::vec3(0, 0, -1);
-    if (inputState.moveBackward)
-      direction += glm::vec3(0, 0, 1);
-    if (inputState.moveLeft)
-      direction += glm::vec3(-1, 0, 0);
-    if (inputState.moveRight)
-      direction += glm::vec3(1, 0, 0);
-    if (inputState.moveUp)
+    if (m_rotation.x > 89.0f)
+      m_rotation.x = 89.0f;
+    if (m_rotation.x < -89.0f)
+      m_rotation.x = -89.0f;
+
+    // Update front and up vectors based on the new rotation
+    float pitch = glm::radians(m_rotation.x);
+    float yaw = glm::radians(m_rotation.y);
+
+    m_front.x = cos(pitch) * cos(yaw);
+    m_front.y = sin(pitch);
+    m_front.z = cos(pitch) * sin(yaw);
+    m_front = glm::normalize(m_front);
+
+    // Recalculate the right and up vectors
+    glm::vec3 right = glm::normalize(glm::cross(m_front, glm::vec3(0, 1, 0)));
+    m_up = glm::normalize(glm::cross(right, m_front));
+  }
+
+  void update() override
+  {
+    if (m_firstUpdate)
+    {
+      m_lastUpdateTime = std::chrono::steady_clock::now();
+      m_firstUpdate = false;
+      return;
+    }
+    auto now = std::chrono::steady_clock::now();
+    auto deltaTime = std::chrono::duration_cast<std::chrono::nanoseconds>(now - m_lastUpdateTime);
+    m_lastUpdateTime = now;
+
+    glm::vec3 direction(0.0f, 0.0f, 0.0f);
+    glm::vec3 horizontalFront = glm::vec3(m_front.x, 0.0f, m_front.z);
+    glm::vec3 horizontalRight = glm::vec3(-m_front.z, 0.0f, m_front.x);
+
+    if (m_inputState.moveForward)
+      direction += horizontalFront;
+    if (m_inputState.moveBackward)
+      direction -= horizontalFront;
+    if (m_inputState.moveLeft)
+      direction -= horizontalRight;
+    if (m_inputState.moveRight)
+      direction += horizontalRight;
+    if (m_inputState.moveUp)
       direction += glm::vec3(0, 1, 0);
-    if (inputState.moveDown)
-      direction += glm::vec3(0, -1, 0);
+    if (m_inputState.moveDown)
+      direction -= glm::vec3(0, 1, 0);
 
     if (direction.x != 0 || direction.y != 0 || direction.z != 0)
     {
       direction = glm::normalize(direction);
 
-      float yaw = m_rotation.y;
-      float cosYaw = std::cos(glm::radians(yaw));
-      float sinYaw = std::sin(glm::radians(yaw));
-
-      // Rotate the direction vector by the yaw angle around the Y axis
-      float rotatedX = direction.x * cosYaw - direction.z * sinYaw;
-      float rotatedZ = direction.x * sinYaw + direction.z * cosYaw;
-      direction.x = rotatedX;
-      direction.z = rotatedZ;
-
       m_position += direction * PLAYER_SPEED * (deltaTime.count() / 1e9f);
 
+      // Handle chunk transitions
       if (m_position.x < 0)
       {
         m_position.x += Chunk::SIZE;
-        m_chunksToRenderDirty = true;
+        m_currentChunk.x -= 1;
       }
       else if (m_position.x >= Chunk::SIZE)
       {
         m_position.x -= Chunk::SIZE;
-        m_chunksToRenderDirty = true;
+        m_currentChunk.x += 1;
       }
-
       if (m_position.y < 0)
       {
         m_position.y += Chunk::SIZE;
-        m_chunksToRenderDirty = true;
+        m_currentChunk.y -= 1;
       }
       else if (m_position.y >= Chunk::SIZE)
       {
         m_position.y -= Chunk::SIZE;
-        m_chunksToRenderDirty = true;
+        m_currentChunk.y += 1;
       }
-
       if (m_position.z < 0)
       {
         m_position.z += Chunk::SIZE;
-        m_chunksToRenderDirty = true;
+        m_currentChunk.z -= 1;
       }
       else if (m_position.z >= Chunk::SIZE)
       {
         m_position.z -= Chunk::SIZE;
-        m_chunksToRenderDirty = true;
+        m_currentChunk.z += 1;
       }
     }
   }
-
-  void setRenderDistance(int distance)
-  {
-    m_relativeChunkOffsets.clear();
-    m_relativeChunkOffsets.reserve((2 * distance + 1) *
-                                   (2 * distance + 1));
-    for (int x = -distance; x <= distance; ++x)
-    {
-      for (int z = -distance; z <= distance; ++z)
-      {
-        if (x * x + z * z < distance * distance)
-          m_relativeChunkOffsets.emplace_back(x, 0, z);
-      }
-    }
-    m_relativeChunkOffsets.shrink_to_fit();
-    m_chunksToRenderDirty = true;
-  }
-
-  std::vector<ChunkPosition> relativeChunkOffsets() const { return m_relativeChunkOffsets; }
-
-  glm::vec3 front() const
-  {
-    float pitch = glm::radians(m_rotation.x);
-    float yaw = glm::radians(m_rotation.y);
-    return glm::normalize(glm::vec3(
-        cos(pitch) * sin(yaw),
-        sin(pitch),
-        cos(pitch) * cos(yaw)));
-  }
-
-  glm::vec3 up() const
-  {
-    return glm::vec3(0, 1, 0);
-  }
-
-  bool chunksToRenderDirty() const { return m_chunksToRenderDirty; }
-  void setChunksToRenderDirty(bool dirty) { m_chunksToRenderDirty = dirty; }
 
 private:
   PlayerChunkPos m_currentChunk;
   glm::vec3 m_position;
   glm::vec3 m_rotation; // pitch, yaw, roll
+  glm::vec3 m_front;
+  glm::vec3 m_up;
 
-  std::vector<ChunkPosition> m_relativeChunkOffsets;
-  bool m_chunksToRenderDirty = false;
+  std::chrono::steady_clock::time_point m_lastUpdateTime;
+  bool m_firstUpdate = true;
 };
 
 #endif // RENDERPLAYERCONTROLLER_H

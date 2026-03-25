@@ -2,7 +2,7 @@
 layout(location = 0) in uvec2 data;
 
 uniform vec3 relativeChunkPos;
-uniform mat4 mvp;
+uniform mat4 vp;
 
 flat out uint blockIdShared;
 flat out uint rotationShared;
@@ -64,7 +64,7 @@ void main() {
   uint rotation = (data.x >> 3) & 0x1Fu;
 
   vec3 facePos = cornors[indices[rotation * 4u + uint(gl_VertexID % 4)]];
-  gl_Position = mvp * vec4(facePos + vec3(x, y, z) / 8 + relativeChunkPos, 1.0);
+  gl_Position = vp * vec4(facePos + vec3(x, y, z) / 8 + relativeChunkPos, 1.0);
 
   blockIdShared = blockID;
   rotationShared = rotation;

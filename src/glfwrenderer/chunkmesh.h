@@ -5,6 +5,7 @@
 
 #include <shared_mutex>
 #include <vector>
+#include <mutex>
 
 #include "TaskScheduler.h"
 
@@ -16,7 +17,7 @@ public:
 
   void requestUpdate();
 
-  void updateVerticesIfNeeded();
+  void updateVertices();
 
   void initialize();
   void uploadVertices();
@@ -28,6 +29,7 @@ private:
   GLuint m_vao;
 
   std::atomic<bool> m_needsUpdate{true};
+  std::mutex m_updateMutex;
 
   std::shared_mutex m_verticesMutex;
   std::vector<uint64_t> m_vertices;
@@ -42,7 +44,7 @@ struct ChunkMeshUpdateVerticesTask : enki::ITaskSet
 
   void ExecuteRange(enki::TaskSetPartition range, uint32_t threadnum) override
   {
-    m_chunkMesh->updateVerticesIfNeeded();
+    m_chunkMesh->updateVertices();
   }
 };
 

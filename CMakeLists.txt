@@ -8,8 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
   src/main.cpp
 
+  src/glfwrenderer/chunkmanager.cpp
   src/glfwrenderer/chunkmesh.cpp
-  src/glfwrenderer/window.cpp
+  src/glfwrenderer/renderer.cpp
+  src/glfwrenderer/app.cpp
 
   src/engine/chunkgeneration.cpp
   src/engine/engine.cpp

@@ -41,22 +41,23 @@ uint64_t generateVertex(int id, int x, int y, int z, int width, int height, int 
          ((static_cast<uint64_t>(rotation) & 0x1F) << 3);
 }
 
-void ChunkMesh::updateVerticesIfNeeded()
+void ChunkMesh::updateVertices()
 {
+  std::lock_guard updateLock(m_updateMutex);
   if (!m_needsUpdate.load())
     return;
   m_needsUpdate.store(false);
 
   std::vector<uint64_t> newVertices;
 
-  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 0));
-  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 1));
-  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 2));
-  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 3));
-  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 4));
-  newVertices.push_back(generateVertex(1, 8, 8, 8, 8, 8, 5));
+  newVertices.push_back(generateVertex(1, 16*8, 16*8, 16*8, 8, 8, 0));
+  newVertices.push_back(generateVertex(1, 16*8, 16*8, 16*8, 8, 8, 1));
+  newVertices.push_back(generateVertex(1, 16*8, 16*8, 16*8, 8, 8, 2));
+  newVertices.push_back(generateVertex(1, 16*8, 16*8, 16*8, 8, 8, 3));
+  newVertices.push_back(generateVertex(1, 16*8, 16*8, 16*8, 8, 8, 4));
+  newVertices.push_back(generateVertex(1, 16*8, 16*8, 16*8, 8, 8, 5));
 
-  std::unique_lock lock(m_verticesMutex);
+  std::unique_lock verticesLock(m_verticesMutex);
   m_vertices.swap(newVertices);
   m_needsUpload = true;
 }
@@ -83,14 +84,14 @@ void ChunkMesh::initialize()
 void ChunkMesh::uploadVertices()
 {
   glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-  std::shared_lock lock(m_verticesMutex);
+  std::shared_lock verticesLock(m_verticesMutex);
   glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(uint64_t),
                m_vertices.data(), GL_STATIC_DRAW);
 }
 
 void ChunkMesh::render()
 {
-  std::shared_lock lock(m_verticesMutex);
+  std::shared_lock verticesLock(m_verticesMutex);
 
   if (m_needsUpload)
   {
