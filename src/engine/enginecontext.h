@@ -11,7 +11,7 @@ class EngineContext {
 public:
   static EngineContext &instance();
 
-  std::thread createEngine();
+  void createEngine();
   void deleteEngine();
 
   std::shared_ptr<Engine> engine();
@@ -21,6 +21,7 @@ private:
 
   std::shared_mutex m_engineMutex;
   std::shared_ptr<Engine> m_engine;
+  std::thread m_engineThread;
 
   EngineContext(const EngineContext &) = delete;
   EngineContext &operator=(const EngineContext &) = delete;

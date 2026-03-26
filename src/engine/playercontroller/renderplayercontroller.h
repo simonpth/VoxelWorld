@@ -4,8 +4,8 @@
 #include <chrono>
 
 #include <glm/glm.hpp>
-#include "engine/chunk.h"
-#include "engine/playercontrollerinterface.h"
+#include "../data/chunk.h"
+#include "playercontrollerinterface.h"
 
 struct RenderPlayerControllerInputState
 {
@@ -106,31 +106,37 @@ public:
       {
         m_position.x += Chunk::SIZE;
         m_currentChunk.x -= 1;
+        m_chunkChanged.store(true);
       }
       else if (m_position.x >= Chunk::SIZE)
       {
         m_position.x -= Chunk::SIZE;
         m_currentChunk.x += 1;
+        m_chunkChanged.store(true);
       }
       if (m_position.y < 0)
       {
         m_position.y += Chunk::SIZE;
         m_currentChunk.y -= 1;
+        m_chunkChanged.store(true);
       }
       else if (m_position.y >= Chunk::SIZE)
       {
         m_position.y -= Chunk::SIZE;
         m_currentChunk.y += 1;
+        m_chunkChanged.store(true);
       }
       if (m_position.z < 0)
       {
         m_position.z += Chunk::SIZE;
         m_currentChunk.z -= 1;
+        m_chunkChanged.store(true);
       }
       else if (m_position.z >= Chunk::SIZE)
       {
         m_position.z -= Chunk::SIZE;
         m_currentChunk.z += 1;
+        m_chunkChanged.store(true);
       }
     }
   }

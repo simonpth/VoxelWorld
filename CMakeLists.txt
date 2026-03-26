@@ -8,17 +8,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
   src/main.cpp
 
-  src/glfwrenderer/chunkmanager.cpp
-  src/glfwrenderer/chunkmesh.cpp
+  src/glfwrenderer/chunkrendermesh.cpp
   src/glfwrenderer/renderer.cpp
   src/glfwrenderer/app.cpp
 
-  src/engine/chunkgeneration.cpp
+  src/engine/algorithm/chunkgeneration.cpp
+  src/engine/algorithm/chunkmeshing.cpp
+
+  src/engine/data/chunkmanager.cpp
+  src/engine/data/world.cpp
+
+  src/engine/playercontroller/playercontroller.cpp
+
   src/engine/engine.cpp
   src/engine/enginecontext.cpp
-  src/engine/objectengine.cpp
-  src/engine/playercontroller.cpp
-  src/engine/world.cpp
 )
 
 # Create the executable

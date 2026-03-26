@@ -1,4 +1,4 @@
-#version 330 core
+#version 410 core
 
 flat in uint blockIdShared;
 flat in uint rotationShared;
@@ -32,6 +32,5 @@ float getLighting(uint rotation) {
 }
 
 void main() {
-  //FragColor = vec4(colors[blockIdShared] * getLighting(rotationShared), 1.0);
-  FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+  FragColor = vec4(colors[blockIdShared] * getLighting(rotationShared), 1.0);
 }

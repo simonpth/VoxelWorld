@@ -1,9 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "chunkmanager.h"
-#include "engine/playercontrollerinterface.h"
-#include "renderplayercontroller.h"
+#include "chunkrendermesh.h"
+#include "engine/playercontroller/renderplayercontroller.h"
 #include "shader.h"
 
 #include <chrono>
@@ -23,6 +22,7 @@ public:
   void processInput(GLFWwindow* window);
 
 private:
+  // FPS tracking
   std::chrono::nanoseconds timeSinceLastFrame();
   void updateFps(std::chrono::nanoseconds delta);
 
@@ -31,18 +31,16 @@ private:
   std::chrono::nanoseconds m_timeSinceLastFpsUpdate = std::chrono::nanoseconds(0);
   int m_framesSinceLastFpsUpdate = 0;
 
-  std::unique_ptr<ChunkManager> m_chunkManager;
-
-  std::unique_ptr<PlayerControllerInterface> m_playerController;
-  PlayerControllerInput m_inputState;
-  PlayerChunkPos m_lastPlayerChunkPos;
+  // Player controller inputs
   bool m_firstRender = true;
-
   double m_lastX = 0;
   double m_lastY = 0;
   bool m_firstMouse = true;
 
+  // Rendering resources
   std::unique_ptr<Shader> m_shader;
+
+  std::unordered_map<ChunkPosition, std::unique_ptr<ChunkRenderMesh>> m_chunkMeshes;
 };
 
 #endif // RENDERER_H

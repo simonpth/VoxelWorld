@@ -1,4 +1,5 @@
-#version 330 core
+#version 410 core
+
 layout(location = 0) in uvec2 data;
 
 uniform vec3 relativeChunkPos;
@@ -18,9 +19,9 @@ const vec3 cornors[8] = vec3[](
   vec3(1.0, 1.0, 1.0), // 6
   vec3(0.0, 1.0, 1.0)  // 7
   /*
-    4---------5
+     4---------5
     /|        /|
-  / |       / |
+   / |       / |
   7--+------6  |
   |  |      |  |
   |  0------|--1

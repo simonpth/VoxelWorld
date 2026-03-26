@@ -1,31 +1,39 @@
 #include "enginecontext.h"
 
-EngineContext &EngineContext::instance() {
+EngineContext &EngineContext::instance()
+{
   static EngineContext context;
   return context;
 }
 
-void EngineContext::deleteEngine() {
+void EngineContext::deleteEngine()
+{
   std::unique_lock lock(m_engineMutex);
-  if(m_engine) {
+  if (m_engine)
+  {
+    m_engine->stop();
+    if (m_engineThread.joinable())
+      m_engineThread.join();
+
     m_engine.reset();
   }
 }
 
-std::thread EngineContext::createEngine() {
-  if (!m_engine) {
-    std::unique_lock lock(m_engineMutex);
+void EngineContext::createEngine()
+{
+  std::unique_lock lock(m_engineMutex);
+  if (!m_engine)
+  {
     m_engine = std::make_shared<Engine>();
 
-    std::thread engineThread([this]() {
-      m_engine->run();
-    });
-    return engineThread;
+    std::shared_ptr<Engine> engineCopy = m_engine; // Capture a copy for the thread
+    m_engineThread = std::thread([engineCopy]()
+                                 { engineCopy->run(); });
   }
-  return std::thread();
 }
 
-std::shared_ptr<Engine> EngineContext::engine() {
+std::shared_ptr<Engine> EngineContext::engine()
+{
   std::shared_lock lock(m_engineMutex);
   return m_engine;
 }

@@ -1,6 +1,4 @@
 #include "chunkgeneration.h"
-#include "chunk.h"
-#include "world.h"
 
 #include <cmath>
 

@@ -1,7 +1,7 @@
 #ifndef CHUNKGENERATION_H
 #define CHUNKGENERATION_H
 
-#include "chunk.h"
+#include "../data/world.h"
 #include <memory>
 
 class ChunkGeneration {

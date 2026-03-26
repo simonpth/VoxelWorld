@@ -3,10 +3,7 @@
 
 int main()
 {
-  auto engineThread = EngineContext::instance().createEngine();
-
-  if (!engineThread.joinable())
-    return -1;
+  EngineContext::instance().createEngine();
 
   App app;
   if (!app.initialize())
@@ -16,7 +13,7 @@ int main()
   app.cleanup();
 
   EngineContext::instance().deleteEngine();
-  engineThread.join();
+  // ^ Waits until the engine thread finishes before exiting the program
 
   return 0;
 }

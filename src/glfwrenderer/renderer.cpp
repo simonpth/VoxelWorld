@@ -3,45 +3,34 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "engine/enginecontext.h"
+
 void Renderer::initialize()
 {
   m_firstRender = true;
-  m_chunkManager = std::make_unique<ChunkManager>();
-  m_chunkManager->setRenderDistance(12);
-  m_playerController = std::make_unique<RenderPlayerController>();
+
   m_shader = std::make_unique<Shader>("shaders/shader.vert", "shaders/shader.frag");
 }
 
 void Renderer::render()
 {
-  if (m_firstRender)
-  {
-    m_lastPlayerChunkPos = m_playerController->currentChunk();
-    m_chunkManager->updateLoadedMeshes(m_lastPlayerChunkPos);
-  }
-
   auto delta = timeSinceLastFrame();
   updateFps(delta);
 
-  m_playerController->setInputState(m_inputState);
-  m_playerController->update();
+  auto playerController = EngineContext::instance().engine()->playerController();
+  playerController->update();
 
   // Update loaded chunks if the player has moved to a different chunk
-  PlayerChunkPos currentChunkPos = m_playerController->currentChunk();
-  if (currentChunkPos != m_lastPlayerChunkPos)
-  {
-    m_lastPlayerChunkPos = currentChunkPos;
-    m_chunkManager->updateLoadedMeshes(currentChunkPos);
-  }
+  PlayerChunkPos currentChunkPos = playerController->currentChunk();
 
   // Calculate the MVP matrix
-  glm::vec3 playerPos = m_playerController->position();
+  glm::vec3 playerPos = playerController->position();
 
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
   glm::mat4 view = glm::lookAt(
       playerPos,
-      playerPos + m_playerController->front(),
-      m_playerController->up());
+      playerPos + playerController->front(),
+      playerController->up());
 
   glm::mat4 vp = projection * view;
 
@@ -57,13 +46,47 @@ void Renderer::render()
 
   m_shader->setMat4("vp", vp);
 
-  for (const auto &[chunkPos, chunkMesh] : m_chunkManager->chunkMeshes())
+  auto chunkManager = EngineContext::instance().engine()->chunkManager();
+
+  chunkManager->lockChunkVertices();
+  auto chunkVertices = chunkManager->chunkVertices();
+  for (const auto &[chunkPos, chunkVertices] : chunkVertices)
   {
+    if (!m_chunkMeshes.contains(chunkPos))
+    {
+      auto newMesh = std::make_unique<ChunkRenderMesh>();
+      newMesh->setChunkVertices(chunkVertices);
+      newMesh->initialize();
+      m_chunkMeshes[chunkPos] = std::move(newMesh);
+    }
+  }
+
+  // Collect chunks to remove (cannot erase while iterating)
+  std::vector<ChunkPosition> chunksToRemove;
+
+  for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes)
+  {
+    if (!chunkVertices.contains(chunkPos))
+    {
+      chunksToRemove.push_back(chunkPos);
+      continue;
+    }
+
+    chunkMesh->uploadVerticesIfNeeded();
+
     float relativeX = (chunkPos.x - currentChunkPos.x) * Chunk::SIZE;
     float relativeY = (chunkPos.y - currentChunkPos.y) * Chunk::SIZE;
     float relativeZ = (chunkPos.z - currentChunkPos.z) * Chunk::SIZE;
     m_shader->setVec3("relativeChunkPos", relativeX, relativeY, relativeZ);
     chunkMesh->render();
+  }
+
+  chunkManager->unlockChunkVertices();
+
+  // Remove chunks after iteration to avoid iterator invalidation
+  for (const auto &chunkPos : chunksToRemove)
+  {
+    m_chunkMeshes.erase(chunkPos);
   }
 
   // Change at the end so all function calls during the first render see m_firstRender as true
@@ -73,23 +96,26 @@ void Renderer::render()
 
 void Renderer::processInput(GLFWwindow *window)
 {
-  m_inputState.moveForward = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
-  m_inputState.moveBackward = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
-  m_inputState.moveLeft = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-  m_inputState.moveRight = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-  m_inputState.moveUp = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-  m_inputState.moveDown = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+  auto playerController = EngineContext::instance().engine()->playerController();
+
+  PlayerControllerInput inputState;
+  inputState.moveForward = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
+  inputState.moveBackward = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+  inputState.moveLeft = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
+  inputState.moveRight = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+  inputState.moveUp = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+  inputState.moveDown = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+
+  playerController->setInputState(inputState);
 
   double xpos, ypos;
   glfwGetCursorPos(window, &xpos, &ypos);
-  
   if (m_firstMouse)
   {
     m_lastX = xpos;
     m_lastY = ypos;
     m_firstMouse = false;
   }
-
   float xoffset = xpos - m_lastX;
   float yoffset = m_lastY - ypos; // reversed since y-coordinates go from bottom to top
   m_lastX = xpos;
@@ -99,7 +125,7 @@ void Renderer::processInput(GLFWwindow *window)
   xoffset *= sensitivity;
   yoffset *= sensitivity;
 
-  m_playerController->addRotation(glm::vec3(yoffset, xoffset, 0.0f));
+  playerController->addRotation(glm::vec3(yoffset, xoffset, 0.0f));
 }
 
 std::chrono::nanoseconds Renderer::timeSinceLastFrame()

@@ -4,7 +4,8 @@
 // Abstract interface for player controller, so that the game logic can be decoupled from the rendering code
 
 #include <glm/glm.hpp>
-#include "playerchunkpos.h"
+#include <atomic>
+#include "../data/playerchunkpos.h"
 
 
 struct PlayerControllerInput {
@@ -42,8 +43,17 @@ public:
   virtual glm::vec3 worldPosition() const = 0;
   virtual PlayerChunkPos currentChunk() const = 0;
 
+  virtual bool chunkChanged() const {
+    return m_chunkChanged.load();
+  }
+
+  virtual void resetChunkChanged() {
+    m_chunkChanged.store(false);
+  }
+
 protected:
   PlayerControllerInput m_inputState;
+  std::atomic<bool> m_chunkChanged = false;
 };
 
 #endif // PLAYERCONTROLLERINTERFACE_H
