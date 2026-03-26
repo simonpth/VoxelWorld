@@ -129,10 +129,9 @@ uint64_t generateVertex(int id, int x, int y, int z, int width, int height, int 
          ((static_cast<uint64_t>(rotation) & 0x1F) << 3);
 }
 
-void ChunkMeshing::updateChunkVertices(std::weak_ptr<ChunkVertices> vertices, ChunkMeshingData *meshingData)
+void ChunkMeshing::updateChunkVertices(std::shared_ptr<ChunkVertices> vertices, ChunkMeshingData *meshingData)
 {
-  if (vertices.expired())
-    return;
+  uint32_t calculatingVersion = vertices->incrementCalculatingVersion();
 
   Chunk *chunk = &meshingData->chunk;
 
@@ -223,8 +222,5 @@ void ChunkMeshing::updateChunkVertices(std::weak_ptr<ChunkVertices> vertices, Ch
     }
   }
 
-  if (auto sharedVertices = vertices.lock())
-  {
-    sharedVertices->setVertices(faceVertices);
-  }
+  vertices->setVertices(faceVertices, calculatingVersion);
 }

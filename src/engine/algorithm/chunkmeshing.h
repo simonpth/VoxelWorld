@@ -59,7 +59,7 @@ class ChunkMeshing
 {
 public:
   static std::unique_ptr<ChunkMeshingData> requestChunkMeshingData(World *world, const ChunkPosition &pos);
-  static void updateChunkVertices(std::weak_ptr<ChunkVertices> vertices, ChunkMeshingData *meshingData);
+  static void updateChunkVertices(std::shared_ptr<ChunkVertices> vertices, ChunkMeshingData *meshingData);
 };
 
 #endif // CHUNKMESHING_H

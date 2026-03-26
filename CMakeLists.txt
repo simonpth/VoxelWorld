@@ -30,13 +30,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Fetch dependencies
 include(FetchContent)
 
-# enkiTS - task scheduler
-FetchContent_Declare(
-  enkiTS
-  GIT_REPOSITORY https://github.com/dougbinks/enkiTS.git
-  GIT_TAG        master
-)
-
 # GLFW - windowing
 FetchContent_Declare(
   glfw
@@ -52,16 +45,13 @@ FetchContent_Declare(
 )
 
 set(CMAKE_POLICY_VERSION_MINIMUM 3.20)
-set(ENKITS_BUILD_C_INTERFACE OFF CACHE BOOL "" FORCE)
-set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLM_ENABLE_CXX_20 ON CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS   OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL      OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(enkiTS glfw glm)
+FetchContent_MakeAvailable(glfw glm)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  enkiTS
   glfw
   glm
 )
@@ -69,6 +59,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # glad
 target_sources(${PROJECT_NAME} PRIVATE lib/glad/src/glad.c)
 target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
+
+# taskflow
+target_include_directories(${PROJECT_NAME} PRIVATE lib)
 
 # OpenGL
 find_package(OpenGL REQUIRED)

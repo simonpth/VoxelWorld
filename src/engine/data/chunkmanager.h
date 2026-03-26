@@ -8,10 +8,13 @@
 #include "world.h"
 #include "playerchunkpos.h"
 
+#include <taskflow/taskflow.hpp>
+
 class ChunkManager
 {
 public:
-  ChunkManager() = default;
+  ChunkManager();
+  ~ChunkManager();
 
   void updateLoadedMeshes(PlayerChunkPos playerChunkPos);
 
@@ -26,6 +29,8 @@ private:
   std::vector<ChunkPosition> m_relativeChunkOffsets;
   std::unordered_map<ChunkPosition, std::shared_ptr<ChunkVertices>> m_chunkVertices;
   std::mutex m_chunkVerticesMutex;
+
+  tf::Executor m_executor;
 };
 
 #endif // CHUNKMANAGER_H

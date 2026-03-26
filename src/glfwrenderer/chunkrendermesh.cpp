@@ -46,12 +46,10 @@ void ChunkRenderMesh::initialize()
 
 void ChunkRenderMesh::uploadVerticesIfNeeded()
 {
-  if (auto sharedVertices = m_chunkVertices.lock()) // this only gets the shared ptr
+  if (m_uploadedVersion != m_chunkVertices->version())
   {
-    if(m_uploadedVersion == sharedVertices->version())
-      return; // No need to update if the version hasn't changed
-    sharedVertices->lockShared();
-    auto vertices = sharedVertices->vertices();
+    m_chunkVertices->lockShared();
+    auto vertices = m_chunkVertices->vertices();
 
     m_currentVerticesSize = vertices.size();
 
@@ -59,9 +57,9 @@ void ChunkRenderMesh::uploadVerticesIfNeeded()
     glBufferData(GL_ARRAY_BUFFER, m_currentVerticesSize * sizeof(uint64_t),
                  vertices.data(), GL_STATIC_DRAW);
 
-    m_uploadedVersion = sharedVertices->version();
+    m_uploadedVersion = m_chunkVertices->version();
 
-    sharedVertices->unlockShared();
+    m_chunkVertices->unlockShared();
   }
 }
 

@@ -42,6 +42,7 @@ void Renderer::render()
   m_shader->use();
 
   glDisable(GL_BLEND);
+  // glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
 
   m_shader->setMat4("vp", vp);

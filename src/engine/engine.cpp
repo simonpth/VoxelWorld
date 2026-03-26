@@ -10,7 +10,6 @@ Engine::Engine()
   m_world = std::make_shared<World>();
   m_playerController = std::make_unique<RenderPlayerController>();
   m_chunkManager = std::make_unique<ChunkManager>();
-
 }
 
 Engine::~Engine()

@@ -15,7 +15,7 @@ public:
   Engine();
   ~Engine();
 
-  std::weak_ptr<World> world() { return m_world; }
+  std::shared_ptr<World> world() { return m_world; }
 
   void run();
   void stop();
