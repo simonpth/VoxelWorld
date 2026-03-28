@@ -20,7 +20,7 @@ Engine::~Engine()
 void Engine::gameLoop()
 {
   // Initial chunk loading around the player
-  m_chunkManager->setRenderDistance(0);
+  m_chunkManager->setRenderDistance(7);
   m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
 
   using clock = std::chrono::steady_clock;
