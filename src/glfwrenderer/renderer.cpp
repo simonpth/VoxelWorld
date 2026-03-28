@@ -154,6 +154,6 @@ void Renderer::updateFps(std::chrono::nanoseconds delta)
     m_framesSinceLastFpsUpdate = 0;
     m_timeSinceLastFpsUpdate = std::chrono::nanoseconds(0);
 
-    std::println("FPS: {}", m_fps);
+    std::println(std::cout, "FPS: {}", m_fps);
   }
 }
