@@ -20,7 +20,7 @@ Engine::~Engine()
 void Engine::gameLoop()
 {
   // Initial chunk loading around the player
-  m_chunkManager->setRenderDistance(8);
+  m_chunkManager->setRenderDistance(0);
   m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
 
   using clock = std::chrono::steady_clock;
@@ -56,26 +56,28 @@ void Engine::gameLoop()
 // Runs every tick (20ms) to update game logic
 void Engine::tick()
 {
-  std::vector<std::thread> updateThreads;
+  tf::Taskflow updateTaskflow;
 
   // Check if the player has moved to a different chunk and update loaded meshes if necessary
   if (m_playerController->chunkChanged())
   {
     m_playerController->resetChunkChanged();
 
-    std::thread updateLoadedMeshesThread([this]()
-                                         { m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk()); });
-    updateThreads.push_back(std::move(updateLoadedMeshesThread));
+    updateTaskflow.emplace([this]() { m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk()); });
   }
 
-  // Wait for all update threads to finish before the next tick
-  for (auto &thread : updateThreads)
-  {
-    if (thread.joinable())
-    {
-      thread.join();
-    }
-  }
+  updateTaskflow.emplace([this]() {
+    auto chunk = m_playerController->currentChunk();
+    glm::vec3 pos = m_playerController->position() + m_playerController->front() * 5.0f; // Position 5 units in front of the player
+    glm::ivec3 worldPos;
+    worldPos.x = std::round(pos.x) + chunk.x * Chunk::SIZE;
+    worldPos.y = std::round(pos.y) + chunk.y * Chunk::SIZE;
+    worldPos.z = std::round(pos.z) + chunk.z * Chunk::SIZE;
+    m_chunkManager->setBlockAndUpdate(worldPos, Block(1, 0));
+  });
+
+  // Wait for all update tasks to finish before the next tick
+  m_executor.run(updateTaskflow).wait();
 }
 
 void Engine::run()

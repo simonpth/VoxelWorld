@@ -8,6 +8,8 @@
 #include <atomic>
 #include <memory>
 
+#include <taskflow/taskflow.hpp>
+
 class Engine
 {
 
@@ -36,6 +38,8 @@ private:
 
   std::unique_ptr<PlayerControllerInterface> m_playerController;
   std::unique_ptr<ChunkManager> m_chunkManager;
+
+  tf::Executor m_executor;
 };
 
 #endif // ENGINE_H

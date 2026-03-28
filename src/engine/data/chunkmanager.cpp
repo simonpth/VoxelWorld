@@ -28,10 +28,7 @@ void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
         auto vertices = std::make_shared<ChunkVertices>();
         m_chunkVertices[chunkPos] = vertices;
 
-        m_executor.silent_async([chunkPos, vertices]() {
-          auto world = EngineContext::instance().engine()->world();
-          auto meshingData = ChunkMeshing::requestChunkMeshingData(world.get(), chunkPos);
-          ChunkMeshing::updateChunkVertices(vertices, meshingData.get()); });
+        updateChunkAsync(chunkPos, vertices);
       }
     }
   }
@@ -43,6 +40,43 @@ void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
   m_chunkVerticesMutex.unlock();
 }
 
+void ChunkManager::setBlockAndUpdate(glm::ivec3 worldPos, Block block) {
+  auto [chunkPos, pos] = World::worldPosToChunkAndBlockPos(worldPos);
+
+  auto world = EngineContext::instance().engine()->world();
+  world->setBlock(worldPos, block);
+
+  updateChunkAsync(chunkPos);
+
+  if (pos.x == 0) {
+    // Update -X neighbor
+    ChunkPosition neighborPos = chunkPos + ChunkPosition(-1, 0, 0);
+    updateChunkAsync(neighborPos);
+  } else if (pos.x == Chunk::SIZE - 1) {
+    // Update +X neighbor
+    ChunkPosition neighborPos = chunkPos + ChunkPosition(1, 0, 0);
+    updateChunkAsync(neighborPos);
+  }
+  if (pos.y == 0) {
+    // Update -Y neighbor
+    ChunkPosition neighborPos = chunkPos + ChunkPosition(0, -1, 0);
+    updateChunkAsync(neighborPos);
+  } else if (pos.y == Chunk::SIZE - 1) {
+    // Update +Y neighbor
+    ChunkPosition neighborPos = chunkPos + ChunkPosition(0, 1, 0);
+    updateChunkAsync(neighborPos);
+  }
+  if (pos.z == 0) {
+    // Update -Z neighbor
+    ChunkPosition neighborPos = chunkPos + ChunkPosition(0, 0, -1);
+    updateChunkAsync(neighborPos);
+  } else if (pos.z == Chunk::SIZE - 1) {
+    // Update +Z neighbor
+    ChunkPosition neighborPos = chunkPos + ChunkPosition(0, 0, 1);
+    updateChunkAsync(neighborPos);
+  }
+}
+
 void ChunkManager::setRenderDistance(int distance) {
   m_relativeChunkOffsets.clear();
   m_relativeChunkOffsets.reserve((2 * distance + 1) * (2 * distance + 1) * (2 * distance + 1));
@@ -52,4 +86,20 @@ void ChunkManager::setRenderDistance(int distance) {
     }
   }
   m_relativeChunkOffsets.shrink_to_fit();
+}
+
+void ChunkManager::updateChunkAsync(const ChunkPosition &chunkPos, std::shared_ptr<ChunkVertices> vertices) {
+  if (!vertices) {
+    auto verticesIt = m_chunkVertices.find(chunkPos);
+    if (verticesIt != m_chunkVertices.end()) {
+      vertices = verticesIt->second;
+    }
+  }
+  if (vertices) {
+    m_executor.silent_async([chunkPos, vertices]() {
+      auto world = EngineContext::instance().engine()->world();
+      auto meshingData = ChunkMeshing::requestChunkMeshingData(world.get(), chunkPos);
+      ChunkMeshing::updateChunkVertices(vertices, meshingData.get());
+    });
+  }
 }

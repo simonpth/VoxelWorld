@@ -10,6 +10,8 @@
 
 #include <taskflow/taskflow.hpp>
 
+#include <glm/glm.hpp>
+
 class ChunkManager
 {
 public:
@@ -17,6 +19,8 @@ public:
   ~ChunkManager();
 
   void updateLoadedMeshes(PlayerChunkPos playerChunkPos);
+
+  void setBlockAndUpdate(glm::ivec3 worldPos, Block block);
 
   void setRenderDistance(int distance);
 
@@ -26,6 +30,8 @@ public:
   void lockChunkVertices() { m_chunkVerticesMutex.lock(); } // Before rendering
   void unlockChunkVertices() { m_chunkVerticesMutex.unlock(); } // After rendering
 private:
+  void updateChunkAsync(const ChunkPosition &chunkPos, std::shared_ptr<ChunkVertices> vertices = nullptr);
+
   std::vector<ChunkPosition> m_relativeChunkOffsets;
   std::unordered_map<ChunkPosition, std::shared_ptr<ChunkVertices>> m_chunkVertices;
   std::mutex m_chunkVerticesMutex;

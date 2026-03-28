@@ -5,6 +5,7 @@
 #include "engine/playercontroller/renderplayercontroller.h"
 #include "shader.h"
 
+#include <atomic>
 #include <chrono>
 
 #include <GLFW/glfw3.h>
@@ -20,6 +21,9 @@ public:
   void render();
 
   void processInput(GLFWwindow* window);
+
+  void setWindowWidth(int width) { m_windowWidth.store(width); }
+  void setWindowHeight(int height) { m_windowHeight.store(height); }
 
 private:
   // FPS tracking
@@ -38,6 +42,8 @@ private:
   bool m_firstMouse = true;
 
   // Rendering resources
+  std::atomic<int> m_windowWidth, m_windowHeight;
+
   std::unique_ptr<Shader> m_shader;
 
   std::unordered_map<ChunkPosition, std::unique_ptr<ChunkRenderMesh>> m_chunkMeshes;

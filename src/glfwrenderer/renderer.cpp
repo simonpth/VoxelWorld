@@ -26,7 +26,8 @@ void Renderer::render()
   // Calculate the MVP matrix
   glm::vec3 playerPos = playerController->position();
 
-  glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
+  float aspectRatio = static_cast<float>(m_windowWidth.load()) / static_cast<float>(m_windowHeight.load());
+  glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
   glm::mat4 view = glm::lookAt(
       playerPos,
       playerPos + playerController->front(),
