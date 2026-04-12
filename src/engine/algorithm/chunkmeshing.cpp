@@ -11,67 +11,62 @@ std::unique_ptr<ChunkMeshingData> ChunkMeshing::requestChunkMeshingData(World *w
   world->loadOrGenerateChunk(pos + ChunkPosition(0, 0, -1));
 
   // Now we can safely read the chunk data
-  world->lockChunksMutexShared();
   auto meshingData = std::make_unique<ChunkMeshingData>();
 
-  meshingData->chunk = *world->chunks().at(pos);
-  world->unlockChunksMutexShared();
+  {
+    ChunkReadHandle chunkReadHandle = world->getChunkRead(pos);
+    meshingData->chunk = *chunkReadHandle.chunk;
+  }
 
   // Fill in the solid masks based on the chunk's blocks
+  auto chunk = &meshingData->chunk;
   for (int x = 0; x < Chunk::SIZE; ++x) {
     for (int y = 0; y < Chunk::SIZE; ++y) {
       for (int z = 0; z < Chunk::SIZE; ++z) {
-        if (meshingData->chunk.block(x, y, z).isSolid()) {
+        if (chunk->block(x, y, z).isSolid()) {
           meshingData->setSolidMask(x, y, z);
         }
       }
     }
   }
 
-  // Neighboring chunks are not copied so the lock must be held while accessing them
-  world->lockChunksMutexShared();
-
   // Masks are 34x34x34 to account for neighboring blocks, so we need to check
   // adjacent chunks
   // Check +X neighbor
-  if (world->chunks().contains(pos + ChunkPosition(1, 0, 0))) {
-    Chunk *neighborChunk = world->chunks().at(pos + ChunkPosition(1, 0, 0)).get();
+  if (auto chunkReadHandle = world->getChunkRead(pos + ChunkPosition(1, 0, 0))) {
     for (int y = 0; y < Chunk::SIZE; ++y) {
       for (int z = 0; z < Chunk::SIZE; ++z) {
-        if (neighborChunk->block(0, y, z).isSolid()) {
+        if (chunkReadHandle.chunk->block(0, y, z).isSolid()) {
           meshingData->setSolidMask(Chunk::SIZE, y, z); // +X face
         }
       }
     }
   }
   // Check +Y neighbor
-  if (world->chunks().contains(pos + ChunkPosition(0, 1, 0))) {
-    Chunk *neighborChunkY = world->chunks().at(pos + ChunkPosition(0, 1, 0)).get();
+  if (auto chunkReadHandle = world->getChunkRead(pos + ChunkPosition(0, 1, 0))) {
     for (int z = 0; z < Chunk::SIZE; ++z) {
       for (int x = 0; x < Chunk::SIZE; ++x) {
-        if (neighborChunkY->block(x, 0, z).isSolid()) {
+        if (chunkReadHandle.chunk->block(x, 0, z).isSolid()) {
           meshingData->setSolidMask(x, Chunk::SIZE, z); // +Y face
         }
       }
     }
   }
   // Check +Z neighbor
-  if (world->chunks().contains(pos + ChunkPosition(0, 0, 1))) {
-    Chunk *neighborChunkZ = world->chunks().at(pos + ChunkPosition(0, 0, 1)).get();
+  if (auto chunkReadHandle = world->getChunkRead(pos + ChunkPosition(0, 0, 1))) {
     for (int y = 0; y < Chunk::SIZE; ++y) {
       for (int x = 0; x < Chunk::SIZE; ++x) {
-        if (neighborChunkZ->block(x, y, 0).isSolid()) {
+        if (chunkReadHandle.chunk->block(x, y, 0).isSolid()) {
           meshingData->setSolidMask(x, y, Chunk::SIZE); // +Z face
         }
       }
     }
   }
   // Check -X neighbor
-  if (world->chunks().contains(pos + ChunkPosition(-1, 0, 0))) {
-    const Chunk *neighborChunkNegX = world->chunks().at(pos + ChunkPosition(-1, 0, 0)).get();
+  if (auto chunkReadHandle = world->getChunkRead(pos + ChunkPosition(-1, 0, 0))) {
     for (int y = 0; y < Chunk::SIZE; ++y) {
       for (int z = 0; z < Chunk::SIZE; ++z) {
-        if (neighborChunkNegX->block(Chunk::SIZE - 1, y, z).isSolid()) {
+        if (chunkReadHandle.chunk->block(Chunk::SIZE - 1, y, z).isSolid()) {
           meshingData->setSolidMask(-1, y, z); // -X face
         }
       }
@@ -79,30 +74,25 @@ std::unique_ptr<ChunkMeshingData> ChunkMeshing::requestChunkMeshingData(World *w
   }
 
   // Check -Y neighbor
-  if (world->chunks().contains(pos + ChunkPosition(0, -1, 0))) {
-    const Chunk *neighborChunkNegY = world->chunks().at(pos + ChunkPosition(0, -1, 0)).get();
+  if (auto chunkReadHandle = world->getChunkRead(pos + ChunkPosition(0, -1, 0))) {
     for (int z = 0; z < Chunk::SIZE; ++z) {
       for (int x = 0; x < Chunk::SIZE; ++x) {
-        if (neighborChunkNegY->block(x, Chunk::SIZE - 1, z).isSolid()) {
+        if (chunkReadHandle.chunk->block(x, Chunk::SIZE - 1, z).isSolid()) {
           meshingData->setSolidMask(x, -1, z); // -Y face
         }
       }
     }
   }
   // Check -Z neighbor
-  if (world->chunks().contains(pos + ChunkPosition(0, 0, -1))) {
-    const Chunk *neighborChunkNegZ = world->chunks().at(pos + ChunkPosition(0, 0, -1)).get();
+  if (auto chunkReadHandle = world->getChunkRead(pos + ChunkPosition(0, 0, -1))) {
     for (int y = 0; y < Chunk::SIZE; ++y) {
       for (int x = 0; x < Chunk::SIZE; ++x) {
-        if (neighborChunkNegZ->block(x, y, Chunk::SIZE - 1).isSolid()) {
+        if (chunkReadHandle.chunk->block(x, y, Chunk::SIZE - 1).isSolid()) {
           meshingData->setSolidMask(x, y, -1); // -Z face
         }
       }
     }
   }
-
-  // Unlock after accessing all neighboring chunks
-  world->unlockChunksMutexShared();
 
   return std::move(meshingData);
 }

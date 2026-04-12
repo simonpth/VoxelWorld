@@ -18,12 +18,12 @@ void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
     chunksToRemove.insert(chunkPos);
   }
 
+  std::lock_guard lock(m_chunkVerticesMutex);
   for (const auto &offset : m_relativeChunkOffsets) {
     for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
       ChunkPosition chunkPos(playerChunkPos.x + offset.x, y, playerChunkPos.z + offset.z);
       chunksToRemove.erase(chunkPos);
 
-      std::lock_guard lock(m_chunkVerticesMutex);
       if (!m_chunkVertices.contains(chunkPos)) {
         auto vertices = std::make_shared<ChunkVertices>();
         m_chunkVertices[chunkPos] = vertices;
@@ -33,11 +33,9 @@ void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
     }
   }
 
-  m_chunkVerticesMutex.lock();
   for (const auto &chunkPos : chunksToRemove) {
     m_chunkVertices.erase(chunkPos);
   }
-  m_chunkVerticesMutex.unlock();
 }
 
 void ChunkManager::setBlockAndUpdate(glm::ivec3 worldPos, Block block) {
@@ -46,8 +44,8 @@ void ChunkManager::setBlockAndUpdate(glm::ivec3 worldPos, Block block) {
   auto world = EngineContext::instance().engine()->world();
   world->setBlock(worldPos, block);
 
+  // Update the chunk containing the block and its neighbors if the block is on the edge of the chunk
   updateChunkAsync(chunkPos);
-
   if (pos.x == 0) {
     // Update -X neighbor
     ChunkPosition neighborPos = chunkPos + ChunkPosition(-1, 0, 0);

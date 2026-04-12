@@ -2,6 +2,7 @@
 #define RAYTRAVERSAL_H
 
 #include <glm/glm.hpp>
+#include "engine/data/world.h"^
 
 struct Ray {
   glm::vec3 origin;
@@ -17,7 +18,6 @@ struct RayHit {
 
 class RayTraversal {
 public:
-  static RayHit traverse(const Ray& ray, float maxDistance);
+  static RayHit traverse(const Ray& ray, float maxDistance, World *world);
 };
-
 #endif // RAYTRAVERSAL_H

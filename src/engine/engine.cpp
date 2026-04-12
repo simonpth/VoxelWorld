@@ -73,7 +73,7 @@ void Engine::tick()
     worldPos.x = std::round(pos.x) + chunk.x * Chunk::SIZE;
     worldPos.y = std::round(pos.y) + chunk.y * Chunk::SIZE;
     worldPos.z = std::round(pos.z) + chunk.z * Chunk::SIZE;
-    m_chunkManager->setBlockAndUpdate(worldPos, Block(1, 0));
+    // m_chunkManager->setBlockAndUpdate(worldPos, Block(3, 0));
   });
 
   // Wait for all update tasks to finish before the next tick

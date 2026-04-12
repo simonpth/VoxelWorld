@@ -10,6 +10,32 @@
 
 #include <glm/glm.hpp>
 
+struct ChunkReadHandle {
+  Chunk *chunk = nullptr;
+
+  ChunkReadHandle() = default;
+  ChunkReadHandle(Chunk *chunk, std::shared_mutex &mtx)
+      : chunk(chunk), m_lock(mtx) {}
+
+  explicit operator bool() const { return chunk != nullptr; }
+
+private:
+  std::shared_lock<std::shared_mutex> m_lock;
+};
+
+struct ChunkWriteHandle {
+  Chunk *chunk = nullptr;
+
+  ChunkWriteHandle() = default;
+  ChunkWriteHandle(Chunk *chunk, std::shared_mutex &mtx)
+      : chunk(chunk), m_lock(mtx) {}
+
+  explicit operator bool() const { return chunk != nullptr; }
+
+private:
+  std::unique_lock<std::shared_mutex> m_lock;
+};
+
 class World {
 public:
   static constexpr int CHUNKHEIGHT = 8;
@@ -20,14 +46,10 @@ public:
 
   // Sets the block if the chunk exists, otherwise does nothing
   void setBlock(const glm::ivec3 &worldPos, const Block &block);
+  Block getBlock(const glm::ivec3 &worldPos);
 
-  void lockChunksMutexShared() { m_chunksMutex.lock_shared(); }
-  void unlockChunksMutexShared() { m_chunksMutex.unlock_shared(); }
-
-  void lockChunksMutexUnique() { m_chunksMutex.lock(); }
-  void unlockChunksMutexUnique() { m_chunksMutex.unlock(); }
-
-  const std::unordered_map<ChunkPosition, std::unique_ptr<Chunk>> &chunks() const { return m_chunks; }
+  ChunkReadHandle getChunkRead(const ChunkPosition &pos);
+  ChunkWriteHandle getChunkWrite(const ChunkPosition &pos);
 
   // Utility functions for converting between world coordinates and chunk/block coordinates
   static glm::ivec3 chunkAndBlockPosToWorldPos(const ChunkPosition &chunkPos, const glm::ivec3 &blockPos) {
@@ -49,8 +71,10 @@ public:
   }
 
 private:
-  std::shared_mutex m_chunksMutex;
-  std::unordered_map<ChunkPosition, std::unique_ptr<Chunk>> m_chunks;
+  std::shared_mutex m_globalMutex;
+  std::unordered_map<
+      ChunkPosition, std::pair<std::unique_ptr<Chunk>, std::unique_ptr<std::shared_mutex>>>
+      m_chunks;
 };
 
 #endif // WORLD_H

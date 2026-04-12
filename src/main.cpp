@@ -9,6 +9,7 @@ int main()
   if (!app.initialize())
     return -1;
 
+    
   app.mainLoop();
   app.cleanup();
 

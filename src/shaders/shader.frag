@@ -8,7 +8,7 @@ out vec4 FragColor;
 vec3 colors[4] = vec3[](
   vec3(0.5, 0.5, 0.5), // gray for block ID 0
   vec3(1.0, 0.0, 0.0), // red
-  vec3(0.0, 1.0, 0.0), // green
+  vec3(0.0, 0.58, 0.106), // green
   vec3(0.0, 0.0, 1.0)  // blue
 );
 
@@ -28,7 +28,7 @@ vec3 normals[6] = vec3[](
 float getLighting(uint rotation) {
   vec3 normal = normals[rotation];
   float diff = max(dot(normal, lightDir), 0.0);
-  return diff * 0.4 + 0.6; // simple diffuse + ambient
+  return diff * 0.4 + 0.7; // simple diffuse + ambient
 }
 
 void main() {
