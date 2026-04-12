@@ -4,10 +4,6 @@ project(VoxelWorld VERSION 0.1 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# FastNoise2
-set(FASTNOISE2_NOISETOOL OFF CACHE BOOL "Build Noise Tool" FORCE) #example if don't need the graph tool
-add_subdirectory(lib/FastNoise2)
-
 # Add source file
 set(SOURCES
   src/main.cpp
@@ -48,16 +44,25 @@ FetchContent_Declare(
   GIT_TAG        1.0.3
 )
 
+# FastNoise2 - noise generation
+FetchContent_Declare(
+  FastNoise2
+  GIT_REPOSITORY https://github.com/Auburn/FastNoise2.git
+  GIT_TAG        v1.1.1
+)
+
 set(CMAKE_POLICY_VERSION_MINIMUM 3.20)
 set(GLM_ENABLE_CXX_20 ON CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS   OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL      OFF CACHE BOOL "" FORCE)
+set(FASTNOISE2_NOISETOOL OFF CACHE BOOL "Build Noise Tool" FORCE) #example if don't need the graph tool
 
-FetchContent_MakeAvailable(glfw glm)
+FetchContent_MakeAvailable(glfw glm FastNoise2)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   glfw
   glm
+  FastNoise2
 )
 
 # glad
@@ -66,9 +71,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
 
 # taskflow
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
-
-# FastNoise2
-target_link_libraries(${PROJECT_NAME} PRIVATE FastNoise2)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
