@@ -5,15 +5,13 @@
 
 #include "engine/enginecontext.h"
 
-void Renderer::initialize()
-{
+void Renderer::initialize() {
   m_firstRender = true;
 
   m_shader = std::make_unique<Shader>("shaders/shader.vert", "shaders/shader.frag");
 }
 
-void Renderer::render()
-{
+void Renderer::render() {
   auto delta = timeSinceLastFrame();
   updateFps(delta);
 
@@ -50,30 +48,31 @@ void Renderer::render()
 
   auto chunkManager = EngineContext::instance().engine()->chunkManager();
 
-  chunkManager->lockChunkVertices();
-  auto chunkVertices = chunkManager->chunkVertices();
-  for (const auto &[chunkPos, chunkVertices] : chunkVertices)
-  {
-    if (!m_chunkMeshes.contains(chunkPos))
+  if (chunkManager->loadedChunkVersion() != m_chunkManagerChunkVersion) {
+    m_chunkManagerChunkVersion = chunkManager->loadedChunkVersion();
+
+    std::queue<LoadedChunkUpdate> updates;
     {
-      auto newMesh = std::make_unique<ChunkRenderMesh>();
-      newMesh->setChunkVertices(chunkVertices);
-      newMesh->initialize();
-      m_chunkMeshes[chunkPos] = std::move(newMesh);
+      LoadedChunkUpdatesReadHandle handle = chunkManager->getLoadedChunkUpdates();
+      std::swap(updates, *handle.loadedChunkUpdates);
+    }
+
+    while (!updates.empty()) {
+      const LoadedChunkUpdate &update = updates.front();
+      for (const auto &[pos, vertices] : update.chunksToLoad) {
+        auto chunkMesh = std::make_unique<ChunkRenderMesh>();
+        chunkMesh->setChunkVertices(vertices);
+        chunkMesh->initialize();
+        m_chunkMeshes[pos] = std::move(chunkMesh);
+      }
+      for (const ChunkPosition &pos : update.chunksToUnload) {
+        m_chunkMeshes.erase(pos);
+      }
+      updates.pop();
     }
   }
 
-  // Collect chunks to remove (cannot erase while iterating)
-  std::vector<ChunkPosition> chunksToRemove;
-
-  for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes)
-  {
-    if (!chunkVertices.contains(chunkPos))
-    {
-      chunksToRemove.push_back(chunkPos);
-      continue;
-    }
-
+  for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes) {
     chunkMesh->uploadVerticesIfNeeded();
 
     float relativeX = (chunkPos.x - currentChunkPos.x) * Chunk::SIZE;
@@ -83,21 +82,12 @@ void Renderer::render()
     chunkMesh->render();
   }
 
-  chunkManager->unlockChunkVertices();
-
-  // Remove chunks after iteration to avoid iterator invalidation
-  for (const auto &chunkPos : chunksToRemove)
-  {
-    m_chunkMeshes.erase(chunkPos);
-  }
-
   // Change at the end so all function calls during the first render see m_firstRender as true
   if (m_firstRender)
     m_firstRender = false;
 }
 
-void Renderer::processInput(GLFWwindow *window)
-{
+void Renderer::processInput(GLFWwindow *window) {
   auto playerController = EngineContext::instance().engine()->playerController();
 
   PlayerControllerInput inputState;
@@ -112,8 +102,7 @@ void Renderer::processInput(GLFWwindow *window)
 
   double xpos, ypos;
   glfwGetCursorPos(window, &xpos, &ypos);
-  if (m_firstMouse)
-  {
+  if (m_firstMouse) {
     m_lastX = xpos;
     m_lastY = ypos;
     m_firstMouse = false;
@@ -130,11 +119,9 @@ void Renderer::processInput(GLFWwindow *window)
   playerController->addRotation(glm::vec3(yoffset, xoffset, 0.0f));
 }
 
-std::chrono::nanoseconds Renderer::timeSinceLastFrame()
-{
+std::chrono::nanoseconds Renderer::timeSinceLastFrame() {
   auto now = std::chrono::steady_clock::now();
-  if (m_firstRender)
-  {
+  if (m_firstRender) {
     m_firstRender = false;
     m_lastFrame = now;
     return std::chrono::nanoseconds(0);
@@ -144,12 +131,10 @@ std::chrono::nanoseconds Renderer::timeSinceLastFrame()
   return delta;
 }
 
-void Renderer::updateFps(std::chrono::nanoseconds delta)
-{
+void Renderer::updateFps(std::chrono::nanoseconds delta) {
   m_timeSinceLastFpsUpdate += delta;
   m_framesSinceLastFpsUpdate++;
-  if (m_timeSinceLastFpsUpdate > std::chrono::nanoseconds(1'000'000'000))
-  {
+  if (m_timeSinceLastFpsUpdate > std::chrono::nanoseconds(1'000'000'000)) {
     m_fps = static_cast<int>(m_framesSinceLastFpsUpdate * 1e9 / m_timeSinceLastFpsUpdate.count());
     m_framesSinceLastFpsUpdate = 0;
     m_timeSinceLastFpsUpdate = std::chrono::nanoseconds(0);

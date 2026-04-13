@@ -42,6 +42,10 @@ struct ChunkPosition {
   constexpr ChunkPosition operator+(const ChunkPosition &other) const noexcept {
     return ChunkPosition(x + other.x, y + other.y, z + other.z);
   }
+
+  constexpr ChunkPosition operator-(const ChunkPosition &other) const noexcept {
+    return ChunkPosition(x - other.x, y - other.y, z - other.z);
+  }
 };
 
 namespace std {

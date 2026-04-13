@@ -6,15 +6,7 @@ ChunkGeneration &ChunkGeneration::instance() {
 }
 
 ChunkGeneration::ChunkGeneration() {
-  perlin = FastNoise::New<FastNoise::Perlin>();
-  perlin->SetScale(400);
-
-  fractal = FastNoise::New<FastNoise::FractalFBm>();
-  fractal->SetSource(perlin);
-  fractal->SetGain(0.5f);
-  fractal->SetWeightedStrength(0.3f);
-  fractal->SetLacunarity(2.25f);
-  fractal->SetOctaveCount(6);
+  generator = FastNoise::NewFromEncodedNodeTree("FQkXCSAJBg@AHpEE@DYmpnZPwwCKQkNAAc@BJC@BEhEHAL/AwAE");
 }
 
 std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) {
@@ -22,11 +14,11 @@ std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) 
 
   std::vector<float> noiseValues(Chunk::AREA);
 
-  if(!fractal) {
+  if (!generator) {
     return chunk; // Return empty chunk if generator failed to initialize
   }
 
-  auto minMax = fractal->GenUniformGrid2D(
+  auto minMax = generator->GenUniformGrid2D(
       noiseValues.data(),
       pos.x * Chunk::SIZE, pos.z * Chunk::SIZE,
       Chunk::SIZE, Chunk::SIZE,
@@ -42,7 +34,7 @@ std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) 
     for (int x = 0; x < Chunk::SIZE; ++x) {
       int worldX = pos.x * Chunk::SIZE + x;
       int worldZ = pos.z * Chunk::SIZE + z;
-      int height = noiseValues[x + z * Chunk::SIZE] * 64 + 128; // Scale and shift noise to get height
+      int height = noiseValues[x + z * Chunk::SIZE] * 48 + 64; // Scale and shift noise to get height
 
       for (int y = 0; y < height - pos.y * Chunk::SIZE && y < Chunk::SIZE; ++y) {
         if (y + pos.y * Chunk::SIZE < 135) {

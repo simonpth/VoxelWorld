@@ -47,6 +47,8 @@ private:
   std::unique_ptr<Shader> m_shader;
 
   std::unordered_map<ChunkPosition, std::unique_ptr<ChunkRenderMesh>> m_chunkMeshes;
+
+  int m_chunkManagerChunkVersion = 0; // Version of chunk data currently rendered
 };
 
 #endif // RENDERER_H

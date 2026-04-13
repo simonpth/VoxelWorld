@@ -14,8 +14,7 @@ public:
 private:
   ChunkGeneration();
   
-  FastNoise::SmartNode<FastNoise::Perlin> perlin;
-  FastNoise::SmartNode<FastNoise::FractalFBm> fractal;
+  FastNoise::SmartNode<> generator;
   int seed = 1337;
 };
 

@@ -1,42 +1,62 @@
 #ifndef CHUNKMANAGER_H
 #define CHUNKMANAGER_H
 
-#include <unordered_map>
+#include "engine/algorithm/chunkmeshing.h"
+#include "playerchunkpos.h"
+#include "world.h"
 #include <memory>
 #include <mutex>
-#include "engine/algorithm/chunkmeshing.h"
-#include "world.h"
-#include "playerchunkpos.h"
+#include <unordered_map>
 
 #include <taskflow/taskflow.hpp>
 
 #include <glm/glm.hpp>
 
-class ChunkManager
-{
+struct LoadedChunkUpdate {
+  std::vector<std::pair<ChunkPosition, std::shared_ptr<ChunkVertices>>> chunksToLoad;
+  std::vector<ChunkPosition> chunksToUnload;
+};
+
+struct LoadedChunkUpdatesReadHandle {
+  std::queue<LoadedChunkUpdate> *loadedChunkUpdates;
+
+  LoadedChunkUpdatesReadHandle(std::queue<LoadedChunkUpdate> *loadedChunkUpdates, std::mutex &mutex)
+      : loadedChunkUpdates(loadedChunkUpdates), lock(mutex) {}
+
+private:
+  std::lock_guard<std::mutex> lock;
+};
+
+class ChunkManager {
 public:
   ChunkManager();
   ~ChunkManager();
 
   void updateLoadedMeshes(PlayerChunkPos playerChunkPos);
+  LoadedChunkUpdatesReadHandle getLoadedChunkUpdates() {
+    return LoadedChunkUpdatesReadHandle(&m_loadedChunkUpdates, m_loadedChunkUpdatesMutex);
+  }
 
   void setBlockAndUpdate(glm::ivec3 worldPos, Block block);
 
   void setRenderDistance(int distance);
 
-  // Only after lockChunkVertices()
-  const std::unordered_map<ChunkPosition, std::shared_ptr<ChunkVertices>> &chunkVertices() const { return m_chunkVertices; }
+  int loadedChunkVersion() const { return m_loadedChunkVersion.load(); }
 
-  void lockChunkVertices() { m_chunkVerticesMutex.lock(); } // Before rendering
-  void unlockChunkVertices() { m_chunkVerticesMutex.unlock(); } // After rendering
 private:
   void updateChunkAsync(const ChunkPosition &chunkPos, std::shared_ptr<ChunkVertices> vertices = nullptr);
 
   std::vector<ChunkPosition> m_relativeChunkOffsets;
+  std::shared_mutex m_relativeOffsetsMutex;
   std::unordered_map<ChunkPosition, std::shared_ptr<ChunkVertices>> m_chunkVertices;
-  std::mutex m_chunkVerticesMutex;
+  std::shared_mutex m_chunkVerticesMutex;
 
   tf::Executor m_executor;
+
+  std::atomic<uint32_t> m_loadedChunkVersion = 0; // Incremented every time chunks are loaded/unloaded
+
+  std::queue<LoadedChunkUpdate> m_loadedChunkUpdates;
+  std::mutex m_loadedChunkUpdatesMutex;
 };
 
 #endif // CHUNKMANAGER_H

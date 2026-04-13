@@ -11,30 +11,45 @@ ChunkManager::~ChunkManager() {
 }
 
 void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
-  std::unordered_set<ChunkPosition> chunksToRemove;
-  chunksToRemove.reserve(m_relativeChunkOffsets.size() * World::CHUNKHEIGHT);
+  LoadedChunkUpdate update;
+  update.chunksToLoad.reserve(32);
+  update.chunksToUnload.reserve(32);
 
-  for (const auto &[chunkPos, _] : m_chunkVertices) {
-    chunksToRemove.insert(chunkPos);
-  }
-
-  std::lock_guard lock(m_chunkVerticesMutex);
-  for (const auto &offset : m_relativeChunkOffsets) {
-    for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
-      ChunkPosition chunkPos(playerChunkPos.x + offset.x, y, playerChunkPos.z + offset.z);
-      chunksToRemove.erase(chunkPos);
-
-      if (!m_chunkVertices.contains(chunkPos)) {
-        auto vertices = std::make_shared<ChunkVertices>();
-        m_chunkVertices[chunkPos] = vertices;
-
-        updateChunkAsync(chunkPos, vertices);
-      }
+  std::unordered_set<ChunkPosition> positions;
+  positions.reserve(m_relativeChunkOffsets.size());
+  {
+    std::shared_lock lock(m_relativeOffsetsMutex);
+    for (const ChunkPosition &offset : m_relativeChunkOffsets) {
+      ChunkPosition pos = ChunkPosition(playerChunkPos.x + offset.x, offset.y, playerChunkPos.z + offset.z);
+      positions.insert(pos);
     }
   }
 
-  for (const auto &chunkPos : chunksToRemove) {
-    m_chunkVertices.erase(chunkPos);
+  std::shared_lock lock(m_chunkVerticesMutex);
+  for (const auto &[chunkPos, vertices] : m_chunkVertices) {
+    if (!positions.contains(chunkPos)) {
+      update.chunksToUnload.push_back(chunkPos);
+    }
+  }
+
+  for (const ChunkPosition &pos : positions) {
+    if (!m_chunkVertices.contains(pos)) {
+      update.chunksToLoad.push_back(std::make_pair(pos, std::make_shared<ChunkVertices>()));
+    }
+  }
+
+  if (!update.chunksToLoad.empty() || !update.chunksToUnload.empty()) {
+    for (const auto &[pos, vertices] : update.chunksToLoad) {
+      m_chunkVertices[pos] = vertices;
+      updateChunkAsync(pos, vertices);
+    }
+    for (const ChunkPosition &pos : update.chunksToUnload) {
+      m_chunkVertices.erase(pos);
+    }
+
+    std::lock_guard lock(m_loadedChunkUpdatesMutex);
+    m_loadedChunkUpdates.push(std::move(update));
+    m_loadedChunkVersion.fetch_add(1);
   }
 }
 
@@ -76,11 +91,14 @@ void ChunkManager::setBlockAndUpdate(glm::ivec3 worldPos, Block block) {
 }
 
 void ChunkManager::setRenderDistance(int distance) {
+  std::unique_lock lock(m_relativeOffsetsMutex);
   m_relativeChunkOffsets.clear();
-  m_relativeChunkOffsets.reserve((2 * distance + 1) * (2 * distance + 1) * (2 * distance + 1));
+  m_relativeChunkOffsets.reserve((2 * distance + 1) * (2 * distance + 1) * World::CHUNKHEIGHT);
   for (int z = -distance; z <= distance; ++z) {
     for (int x = -distance; x <= distance; ++x) {
-      m_relativeChunkOffsets.push_back(ChunkPosition(x, 0, z));
+      for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
+        m_relativeChunkOffsets.push_back(ChunkPosition(x, y, z));
+      }
     }
   }
   m_relativeChunkOffsets.shrink_to_fit();
