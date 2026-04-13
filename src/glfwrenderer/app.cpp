@@ -3,9 +3,6 @@
 #include "engine/constants.h"
 #include "engine/enginecontext.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <iostream>
 
 App::App() {
@@ -23,6 +20,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     App *app = static_cast<App *>(glfwGetWindowUserPointer(window));
+    if (app->getDebugUI().wantsMouse()) return;
     if (app) {
       app->captureFocus();
     }
@@ -60,6 +58,8 @@ bool App::initialize() {
   glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
   glfwSetMouseButtonCallback(m_window, mouse_button_callback);
 
+  m_debugUI.initialize(m_window);
+
   return true;
 }
 
@@ -70,7 +70,11 @@ void App::mainLoop() {
       m_renderer.processInput(m_window);
     }
 
+    m_debugUI.newFrame();
+    
     m_renderer.render();
+
+    m_debugUI.render();
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -78,6 +82,7 @@ void App::mainLoop() {
 }
 
 void App::cleanup() {
+  m_debugUI.cleanup();
   glfwDestroyWindow(m_window);
   m_window = nullptr;
   glfwTerminate();

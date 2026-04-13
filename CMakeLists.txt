@@ -11,6 +11,7 @@ set(SOURCES
   src/glfwrenderer/chunkrendermesh.cpp
   src/glfwrenderer/renderer.cpp
   src/glfwrenderer/app.cpp
+  src/glfwrenderer/debugui.cpp
 
   src/engine/algorithm/chunkgeneration.cpp
   src/engine/algorithm/chunkmeshing.cpp
@@ -22,10 +23,20 @@ set(SOURCES
 
   src/engine/engine.cpp
   src/engine/enginecontext.cpp
+
+  lib/imgui/imgui.cpp
+  lib/imgui/imgui_draw.cpp
+  lib/imgui/imgui_tables.cpp
+  lib/imgui/imgui_widgets.cpp
+  lib/imgui/imgui_impl_glfw.cpp
+  lib/imgui/imgui_impl_opengl3.cpp
 )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE lib/imgui)
 
 # Fetch dependencies
 include(FetchContent)
@@ -75,10 +86,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE lib)
 # OpenGL
 find_package(OpenGL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    src
-)
 
 # Copy shaders next to the executable after build.
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
