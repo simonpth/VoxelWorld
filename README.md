@@ -1,38 +1,61 @@
 # VoxelWorld
 
-A fun voxel-based world engine built with Qt and OpenGL.
+A fun voxel-based world engine built with GLFW and OpenGL.
 
-## 📖 About
+## About
 
-VoxelWorld is a solo developer project exploring voxel rendering and world generation using modern C++ (C++23) and Qt 6.8. This project serves as both a learning experience and a foundation for potential game development.
+VoxelWorld is a solo developer project exploring voxel rendering and world generation using modern C++ (C++23). This project serves as both a learning experience and a foundation for potential game development.
 
-For the qt source code check https://qt.io
+## Features
 
-## 🎮 Features
+- Exploring a procedurally generated voxel world
+- Dynamic chunk loading and unloading based on player position
+- Possible even on older hardware as I optimized everything for performance and memory usage
 
-- **Voxel-based rendering** using OpenGL 4.1 Core Profile
-- **Chunk-based world generation** for efficient rendering
-- **Qt Quick integration** for modern UI development
-- **Object engine** for world entities and interactions
-- **Cross-platform** support (macOS, Windows, Linux)
+## Technical Stack
 
-## 🛠️ Technical Stack
+- C++23
+- Graphics: OpenGL 4.1 Core Profile + Custom GLSL Shaders + GLFW
+- FastNoise2 for noise
+- taskflow for efficient multithreading
 
-- **Language**: C++23
-- **Framework**: Qt 6.8 (Core, Gui, Qml, Quick)
-- **Graphics**: OpenGL 4.1 Core Profile
-- **Build System**: CMake 3.20+
-- **Rendering**: Custom GLSL shaders
+## Getting Started
 
-## 🚀 Getting Started
+Download the latest release from the [Releases](https://github.com/simonpth/VoxelWorld/releases) page or clone the repository and build it yourself (see below).
 
-### Prerequisites
+## Building and Running
 
-- Qt 6.8 or later
-- CMake 3.20 or later
-- C++23 compatible compiler
-- OpenGL 4.1 capable graphics card
+This allows you to experiment with the chunk generation and rendering. You can modify the node tree in `src/engine/algorithm/chunkgeneration.cpp` to see how it affects the terrain (see the FastNoise2 WebEditor)
 
-### Licence
+Make sure you have a working C++23 compiler and CMake installed. Then follow these steps:
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/simonpth/VoxelWorld.git
+   ```
+
+2. Navigate to the project directory:
+
+   ```bash
+   cd VoxelWorld
+   ```
+
+3. Build the project using CMake:
+
+   ```bash
+   mkdir build
+   cd build
+   cmake ..
+   make
+   ```
+
+4. Run the executable:
+
+   ```bash
+   ./VoxelWorld
+   ```
+
+## Licence
 
 GNU GENERAL PUBLIC LICENSE Version 3
