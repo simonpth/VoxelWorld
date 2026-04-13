@@ -3,26 +3,20 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-#include <ostream>
 
-Engine::Engine()
-{
+#include "settings.h"
+
+Engine::Engine() {
   m_world = std::make_shared<World>();
   m_playerController = std::make_unique<RenderPlayerController>();
   m_chunkManager = std::make_unique<ChunkManager>();
 }
 
-Engine::~Engine()
-{
+Engine::~Engine() {
 }
 
 // Main game loop with fixed time step, calls tick() every 20ms
-void Engine::gameLoop()
-{
-  // Initial chunk loading around the player
-  m_chunkManager->setRenderDistance(24);
-  m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
-
+void Engine::gameLoop() {
   using clock = std::chrono::steady_clock;
   using namespace std::chrono;
 
@@ -31,15 +25,13 @@ void Engine::gameLoop()
   auto previous = clock::now();
   auto lag = 0ms;
 
-  while (m_running)
-  {
+  while (m_running) {
     auto current = clock::now();
     lag += duration_cast<milliseconds>(current - previous);
     previous = current;
 
     // Catch-up updates
-    while (lag >= tickTime)
-    {
+    while (lag >= tickTime) {
       // Update game logic here (e.g., physics, AI, world updates)
       tick();
 
@@ -54,18 +46,26 @@ void Engine::gameLoop()
 }
 
 // Runs every tick (20ms) to update game logic
-void Engine::tick()
-{
+void Engine::tick() {
   tf::Taskflow updateTaskflow;
 
-  // Check if the player has moved to a different chunk and update loaded meshes if necessary
-  if (m_playerController->chunkChanged())
-  {
-    m_playerController->resetChunkChanged();
+  // Check if the player has moved to a different chunk -> update loaded chunks
+  updateTaskflow.emplace([this]() {
+    if (m_playerController->chunkChanged()) {
+      m_playerController->resetChunkChanged();
+      m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
+    }
+  });
 
-    updateTaskflow.emplace([this]() { m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk()); });
-  }
+  // Check if the render distance has changed -> update loaded chunks
+  updateTaskflow.emplace([this]() {
+    if (m_chunkManager->renderDistance() != Settings::instance().renderDistance()) {
+      m_chunkManager->setRenderDistance(Settings::instance().renderDistance());
+      m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
+    }
+  });
 
+  // Example of setting a block in front of the player every tick (for testing)
   updateTaskflow.emplace([this]() {
     auto chunk = m_playerController->currentChunk();
     glm::vec3 pos = m_playerController->position() + m_playerController->front() * 5.0f; // Position 5 units in front of the player
@@ -80,13 +80,11 @@ void Engine::tick()
   m_executor.run(updateTaskflow).wait();
 }
 
-void Engine::run()
-{
+void Engine::run() {
   m_running.store(true);
   gameLoop();
 }
 
-void Engine::stop()
-{
+void Engine::stop() {
   m_running.store(false);
 }

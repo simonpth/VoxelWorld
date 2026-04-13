@@ -102,6 +102,7 @@ void ChunkManager::setRenderDistance(int distance) {
     }
   }
   m_relativeChunkOffsets.shrink_to_fit();
+  m_renderDistance = distance;
 }
 
 void ChunkManager::updateChunkAsync(const ChunkPosition &chunkPos, std::shared_ptr<ChunkVertices> vertices) {

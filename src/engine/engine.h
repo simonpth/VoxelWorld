@@ -12,7 +12,6 @@
 
 class Engine
 {
-
 public:
   Engine();
   ~Engine();
@@ -22,12 +21,10 @@ public:
   void run();
   void stop();
 
-  // DO NOT CALL THIS FROM ANY THREAD OTHER THAN THE RENDERING THREAD OR GAMELOOP THREAD
   PlayerControllerInterface *playerController() { return m_playerController.get(); }
 
   // DO NOT CALL THIS FROM ANY THREAD OTHER THAN THE RENDERING THREAD OR GAMELOOP THREAD
   ChunkManager *chunkManager() { return m_chunkManager.get(); }
-
 private:
   std::atomic<bool> m_running = false;
   void gameLoop();

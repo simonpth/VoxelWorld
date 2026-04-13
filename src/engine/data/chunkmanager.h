@@ -43,6 +43,7 @@ public:
 
   int loadedChunkVersion() const { return m_loadedChunkVersion.load(); }
 
+  int renderDistance() const { return m_renderDistance; }
 private:
   void updateChunkAsync(const ChunkPosition &chunkPos, std::shared_ptr<ChunkVertices> vertices = nullptr);
 
@@ -57,6 +58,8 @@ private:
 
   std::queue<LoadedChunkUpdate> m_loadedChunkUpdates;
   std::mutex m_loadedChunkUpdatesMutex;
+
+  int m_renderDistance = -1; // -1 = not set yet
 };
 
 #endif // CHUNKMANAGER_H

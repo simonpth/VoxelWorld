@@ -25,6 +25,7 @@ set(SOURCES
   src/engine/enginecontext.cpp
 
   lib/imgui/imgui.cpp
+  lib/imgui/imgui_demo.cpp
   lib/imgui/imgui_draw.cpp
   lib/imgui/imgui_tables.cpp
   lib/imgui/imgui_widgets.cpp

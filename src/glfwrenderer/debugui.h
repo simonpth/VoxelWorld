@@ -17,6 +17,9 @@ public:
 
 private:
   void drawWidgets();
+  int m_renderDistance; // local copy to drive the slider
+  bool m_vsync; // local copy to drive the checkbox
+  float m_playerSpeed; // local copy to drive the slider
 };
 
 #endif // DEBUGUI_H

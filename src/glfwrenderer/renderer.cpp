@@ -5,16 +5,19 @@
 
 #include "engine/enginecontext.h"
 
-void Renderer::initialize() {
+void Renderer::initialize(GLFWwindow *window) {
   m_firstRender = true;
 
   m_shader = std::make_unique<Shader>("shaders/shader.vert", "shaders/shader.frag");
+
+  m_debugUI.initialize(window);
 }
 
 void Renderer::render() {
-  auto delta = timeSinceLastFrame();
-  updateFps(delta);
+  // Start a new ImGui frame and draw debug widgets
+  m_debugUI.newFrame();
 
+  // Voxel World rendering
   auto playerController = EngineContext::instance().engine()->playerController();
   playerController->update();
 
@@ -82,9 +85,16 @@ void Renderer::render() {
     chunkMesh->render();
   }
 
+  // Render debug UI on top of everything else
+  m_debugUI.render();
+
   // Change at the end so all function calls during the first render see m_firstRender as true
   if (m_firstRender)
     m_firstRender = false;
+}
+
+void Renderer::cleanup() {
+  m_debugUI.cleanup();
 }
 
 void Renderer::processInput(GLFWwindow *window) {
@@ -117,28 +127,4 @@ void Renderer::processInput(GLFWwindow *window) {
   yoffset *= sensitivity;
 
   playerController->addRotation(glm::vec3(yoffset, xoffset, 0.0f));
-}
-
-std::chrono::nanoseconds Renderer::timeSinceLastFrame() {
-  auto now = std::chrono::steady_clock::now();
-  if (m_firstRender) {
-    m_firstRender = false;
-    m_lastFrame = now;
-    return std::chrono::nanoseconds(0);
-  }
-  auto delta = std::chrono::duration_cast<std::chrono::nanoseconds>(now - m_lastFrame);
-  m_lastFrame = now;
-  return delta;
-}
-
-void Renderer::updateFps(std::chrono::nanoseconds delta) {
-  m_timeSinceLastFpsUpdate += delta;
-  m_framesSinceLastFpsUpdate++;
-  if (m_timeSinceLastFpsUpdate > std::chrono::nanoseconds(1'000'000'000)) {
-    m_fps = static_cast<int>(m_framesSinceLastFpsUpdate * 1e9 / m_timeSinceLastFpsUpdate.count());
-    m_framesSinceLastFpsUpdate = 0;
-    m_timeSinceLastFpsUpdate = std::chrono::nanoseconds(0);
-
-    std::println(std::cout, "FPS: {}", m_fps);
-  }
 }

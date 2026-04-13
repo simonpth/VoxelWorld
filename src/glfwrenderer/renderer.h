@@ -4,6 +4,7 @@
 #include "chunkrendermesh.h"
 #include "engine/playercontroller/renderplayercontroller.h"
 #include "shader.h"
+#include "debugui.h"
 
 #include <atomic>
 #include <chrono>
@@ -15,26 +16,18 @@ class Renderer
 public:
   Renderer() = default;
 
-  int fps() const { return m_fps; }
-
-  void initialize();
+  void initialize(GLFWwindow *window);
   void render();
+  void cleanup();
 
   void processInput(GLFWwindow* window);
 
   void setWindowWidth(int width) { m_windowWidth.store(width); }
   void setWindowHeight(int height) { m_windowHeight.store(height); }
 
+  bool uiWantCaptureMouse() const { return m_debugUI.wantsMouse(); }
+
 private:
-  // FPS tracking
-  std::chrono::nanoseconds timeSinceLastFrame();
-  void updateFps(std::chrono::nanoseconds delta);
-
-  std::chrono::steady_clock::time_point m_lastFrame;
-  int m_fps = 0;
-  std::chrono::nanoseconds m_timeSinceLastFpsUpdate = std::chrono::nanoseconds(0);
-  int m_framesSinceLastFpsUpdate = 0;
-
   // Player controller inputs
   bool m_firstRender = true;
   double m_lastX = 0;
@@ -49,6 +42,9 @@ private:
   std::unordered_map<ChunkPosition, std::unique_ptr<ChunkRenderMesh>> m_chunkMeshes;
 
   int m_chunkManagerChunkVersion = 0; // Version of chunk data currently rendered
+
+  // Dear ImGui resources
+  DebugUI m_debugUI;
 };
 
 #endif // RENDERER_H

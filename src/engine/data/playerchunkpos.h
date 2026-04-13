@@ -14,6 +14,4 @@ struct PlayerChunkPos {
   }
 };
 
-static const float PLAYER_SPEED = 20.0f; // units per second
-
 #endif // PLAYERCHUNKPOS_H

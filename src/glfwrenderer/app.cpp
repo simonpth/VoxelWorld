@@ -20,7 +20,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     App *app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    if (app->getDebugUI().wantsMouse()) return;
+    if (app->renderer().uiWantCaptureMouse())
+      return;
     if (app) {
       app->captureFocus();
     }
@@ -45,20 +46,17 @@ bool App::initialize() {
     return false;
   }
   glfwMakeContextCurrent(m_window);
-  glfwSwapInterval(0);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::println(std::cout, "Failed to initialize GLAD");
     return false;
   }
 
-  glfwSetWindowUserPointer(m_window, this);
-  m_renderer.initialize();
-
   glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
   glfwSetMouseButtonCallback(m_window, mouse_button_callback);
 
-  m_debugUI.initialize(m_window);
+  glfwSetWindowUserPointer(m_window, this);
+  m_renderer.initialize(m_window);
 
   return true;
 }
@@ -70,11 +68,12 @@ void App::mainLoop() {
       m_renderer.processInput(m_window);
     }
 
-    m_debugUI.newFrame();
-    
-    m_renderer.render();
+    if (m_captureFocus)
+      ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+    else
+      ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
 
-    m_debugUI.render();
+    m_renderer.render();
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -82,7 +81,7 @@ void App::mainLoop() {
 }
 
 void App::cleanup() {
-  m_debugUI.cleanup();
+  m_renderer.cleanup();
   glfwDestroyWindow(m_window);
   m_window = nullptr;
   glfwTerminate();

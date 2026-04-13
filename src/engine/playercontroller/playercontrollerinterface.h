@@ -29,24 +29,24 @@ class PlayerControllerInterface
 public:
   virtual ~PlayerControllerInterface() = default;
 
+  // should be called every frame with the current input state
   virtual void update() = 0;
-  virtual void setInputState(const PlayerControllerInput &inputState) {
-    m_inputState = inputState;
-  };
+  virtual void setInputState(const PlayerControllerInput &inputState) = 0;
 
+  // after every mouse movement
   virtual void addRotation(const glm::vec3 &rotation) = 0;
 
+  // getters can be called from any thread
   virtual glm::vec3 position() const = 0;
   virtual glm::vec3 rotation() const = 0;
   virtual glm::vec3 front() const = 0;
   virtual glm::vec3 up() const = 0;
   virtual glm::vec3 worldPosition() const = 0;
   virtual PlayerChunkPos currentChunk() const = 0;
-
+  
   virtual bool chunkChanged() const {
     return m_chunkChanged.load();
   }
-
   virtual void resetChunkChanged() {
     m_chunkChanged.store(false);
   }

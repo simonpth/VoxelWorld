@@ -24,15 +24,13 @@ public:
   void setWindowWidth(int width) { m_renderer.setWindowWidth(width); }
   void setWindowHeight(int height) { m_renderer.setWindowHeight(height); }
 
-  const DebugUI& getDebugUI() const { return m_debugUI; }
+  const Renderer& renderer() const { return m_renderer; }
 private:
   void processInput();
 
   GLFWwindow *m_window;
 
   Renderer m_renderer;
-
-  DebugUI m_debugUI;
 
   bool m_captureFocus = false;
 };
