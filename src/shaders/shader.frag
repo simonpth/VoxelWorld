@@ -3,6 +3,8 @@
 flat in uint blockIdShared;
 flat in uint rotationShared;
 
+in vec2 uvShared;
+
 in vec3 relFragPos;
 
 uniform vec3 fogColor;
@@ -10,6 +12,8 @@ uniform float fogStart;
 uniform float fogEnd;
 
 uniform samplerBuffer blockTextureTBO;
+
+uniform sampler2D blockTextureAtlas;
 
 out vec4 FragColor;
 
@@ -35,7 +39,29 @@ float getLighting(uint rotation) {
 void main() {
   uint baseIndex = blockIdShared * 4; // 6 faces per block
 
-  vec4 baseColor = texelFetch(blockTextureTBO, int(baseIndex + 3)).rgba; // base color
+  vec2 baseUV;
+  if (rotationShared == 0u) {
+    baseUV = texelFetch(blockTextureTBO, int(baseIndex)).rg; // x+ face UV
+  } else if (rotationShared == 1u) {
+    baseUV = texelFetch(blockTextureTBO, int(baseIndex)).ba; // y+ face UV
+  } else if (rotationShared == 2u) {
+    baseUV = texelFetch(blockTextureTBO, int(baseIndex + 1)).rg; // z+ face UV
+  } else if (rotationShared == 3u) {
+    baseUV = texelFetch(blockTextureTBO, int(baseIndex + 1)).ba; // x- face UV
+  } else if (rotationShared == 4u) {
+    baseUV = texelFetch(blockTextureTBO, int(baseIndex + 2)).rg; // y- face UV
+  } else if (rotationShared == 5u) {
+    baseUV = texelFetch(blockTextureTBO, int(baseIndex + 2)).ba; // z- face UV
+  }
+
+  vec2 atlasUV = (baseUV + clamp(uvShared, 0.05, 0.95)) / 64.0; // 64x64 blocks in atlas, clamp to avoid bleeding
+
+  vec4 baseColor;
+  if(true) {
+    baseColor = texture(blockTextureAtlas, atlasUV);
+  } else {
+    baseColor = texelFetch(blockTextureTBO, int(baseIndex + 3)).rgba; // base color
+  }
 
   vec3 color = baseColor.rgb * getLighting(rotationShared);
 

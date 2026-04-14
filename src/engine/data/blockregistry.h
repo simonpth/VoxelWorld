@@ -7,7 +7,7 @@ struct BlockTexture {
   glm::vec2 atlasCoords[6]; // Texture atlas coordinates for each face of the block
   glm::vec4 color;           // Color tint for the block
 
-  BlockTexture(glm::ivec2 tex, glm::vec4 col) {
+  BlockTexture(glm::vec2 tex, glm::vec4 col) {
     atlasCoords[0] = tex; // right
     atlasCoords[1] = tex; // top
     atlasCoords[2] = tex; // front
@@ -17,7 +17,7 @@ struct BlockTexture {
     color = col;
   }
 
-  BlockTexture(glm::ivec2 top, glm::ivec2 side, glm::ivec2 bottom, glm::vec4 col) {
+  BlockTexture(glm::vec2 top, glm::vec2 side, glm::vec2 bottom, glm::vec4 col) {
     atlasCoords[0] = side; // right
     atlasCoords[1] = top;  // top
     atlasCoords[2] = side; // front

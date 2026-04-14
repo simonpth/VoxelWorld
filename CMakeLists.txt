@@ -14,6 +14,9 @@ set(SOURCES
   src/glfwrenderer/app.cpp
   src/glfwrenderer/debugui.cpp
 
+  src/glfwrenderer/stbimageimpl.cpp
+  src/glfwrenderer/textureatlas.cpp
+
   src/engine/algorithm/chunkgeneration.cpp
   src/engine/algorithm/chunkmeshing.cpp
 

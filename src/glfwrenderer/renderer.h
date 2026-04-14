@@ -7,6 +7,7 @@
 #include "debugui.h"
 #include "frustum.h"
 #include "blockregistrytbo.h"
+#include "textureatlas.h"
 
 #include <atomic>
 #include <chrono>
@@ -55,6 +56,7 @@ private:
 
   // Textures
   BlockRegistryTBO m_blockRegistryTBO;
+  TextureAtlas m_textureAtlas;
 };
 
 #endif // RENDERER_H

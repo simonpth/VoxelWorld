@@ -5,7 +5,7 @@
 
 #include "engine/enginecontext.h"
 
-static glm::vec3 skyColor = glm::vec3(0.0f, 0.75f, 1.0f);
+static glm::vec3 skyColor = glm::vec3(0.145f, 0.655f, 0.855f);
 
 void Renderer::initialize(GLFWwindow *window) {
   m_firstRender = true;
@@ -21,8 +21,10 @@ void Renderer::initialize(GLFWwindow *window) {
   m_debugUI.initialize(window);
 
   m_blockRegistryTBO.initialize(EngineContext::instance().engine()->blockRegistry());
-
   m_shader->setInt("blockTextureTBO", 0); // Texture unit 0
+
+  m_textureAtlas.initialize("shaders/textures/atlas.png");
+  m_shader->setInt("blockTextureAtlas", 1); // Texture unit 1
 }
 
 void Renderer::render() {
@@ -59,6 +61,7 @@ void Renderer::render() {
 
   // Bind the block registry texture buffer object to texture unit 0
   m_blockRegistryTBO.bind(0);
+  m_textureAtlas.bind(1);
 
   // Update fog parameters in case render distance changed
   int renderDistance = Settings::instance().renderDistance() * Chunk::SIZE;
@@ -73,7 +76,7 @@ void Renderer::render() {
   }
 
   glDisable(GL_BLEND);
-  // glEnable(GL_CULL_FACE);
+  glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
 
   m_shader->setMat4("vp", vp);
@@ -131,6 +134,8 @@ void Renderer::render() {
 
 void Renderer::cleanup() {
   m_debugUI.cleanup();
+  m_blockRegistryTBO.deleteBuffer();
+  m_textureAtlas.cleanup();
 }
 
 void Renderer::processInput(GLFWwindow *window) {

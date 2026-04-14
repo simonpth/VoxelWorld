@@ -9,6 +9,7 @@ ChunkGeneration::ChunkGeneration() {
   generator = FastNoise::NewFromEncodedNodeTree("FQkXCSAJBg@AHpEE@DYmpnZPwwCKQkNAAc@BJC@BEhEHAL/AwAE");
 
   snow = FastNoise::New<FastNoise::Simplex>();
+  snow->SetScale(400.0f);
 }
 
 std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) {
@@ -46,7 +47,7 @@ std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) 
       if(height < 5) height = 5; // Ensure there's at least some ground
 
       for (int y = 0; y <= height - pos.y * Chunk::SIZE && y < Chunk::SIZE; ++y) {
-        if (y + pos.y * Chunk::SIZE > 135 + snowHeight) {
+        if (y + pos.y * Chunk::SIZE > 137 + snowHeight) {
           chunk->setBlock(x, y, z, Block(4)); // Snow
         } else if (y + pos.y * Chunk::SIZE > 130 + snowHeight) {
           chunk->setBlock(x, y, z, Block(3)); // Stone

@@ -7,6 +7,7 @@ uniform mat4 vp;
 
 flat out uint blockIdShared;
 flat out uint rotationShared;
+out vec2 uvShared;
 
 out vec3 relFragPos;
 
@@ -42,12 +43,12 @@ const vec3 cornors[8] = vec3[](
 );
 
 const int indices[24] = int[](
-  2, 1, 6, 5, // 0: +x
-  7, 6, 4, 5, // 1: +y
-  3, 2, 7, 6, // 2: +z
-  3, 0, 7, 4, // 3: -x
-  1, 0, 2, 3, // 4: -y
-  0, 4, 1, 5  // 5: -z
+  6, 2, 5, 1, // 0: +x
+  4, 7, 5, 6, // 1: +y
+  7, 3, 6, 2, // 2: +z
+  4, 0, 7, 3, // 3: -x
+  3, 0, 2, 1, // 4: -y
+  5, 1, 4, 0  // 5: -z
 );
 
 const vec3 debugVertices[4] = vec3[](
@@ -55,6 +56,13 @@ const vec3 debugVertices[4] = vec3[](
   vec3(0.5f, -0.5f, 0.0f),
   vec3(0.0f,  0.5f, 0.0f),
   vec3(-0.5f,  -0.5f, 0.0f)
+);
+
+const vec2 UVs[4] = vec2[](
+  vec2(0.0f, 0.0f),
+  vec2(0.0f, 1.0f),
+  vec2(1.0f, 0.0f),
+  vec2(1.0f, 1.0f)
 );
 
 void main() {
@@ -66,9 +74,11 @@ void main() {
   uint height = (data.x >> 8) & 0xFFu;
   uint rotation = (data.x >> 3) & 0x1Fu;
 
-  vec3 facePos = cornors[indices[rotation * 4u + uint(gl_VertexID % 4)]];
+  vec3 facePos = cornors[indices[rotation * 4u + uint(gl_VertexID)]];
   relFragPos = facePos + vec3(x, y, z) / 8 + relativeChunkPos;
   gl_Position = vp * vec4(relFragPos, 1.0);
+
+  uvShared = UVs[gl_VertexID];
 
   blockIdShared = blockID;
   rotationShared = rotation;
