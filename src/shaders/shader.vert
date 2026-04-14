@@ -8,6 +8,8 @@ uniform mat4 vp;
 flat out uint blockIdShared;
 flat out uint rotationShared;
 
+out vec3 relFragPos;
+
 // array of 6 * 4 vertices (x, y, z) for each block face instance
 const vec3 cornors[8] = vec3[](
   vec3(0.0, 0.0, 0.0), // 0
@@ -65,7 +67,8 @@ void main() {
   uint rotation = (data.x >> 3) & 0x1Fu;
 
   vec3 facePos = cornors[indices[rotation * 4u + uint(gl_VertexID % 4)]];
-  gl_Position = vp * vec4(facePos + vec3(x, y, z) / 8 + relativeChunkPos, 1.0);
+  relFragPos = facePos + vec3(x, y, z) / 8 + relativeChunkPos;
+  gl_Position = vp * vec4(relFragPos, 1.0);
 
   blockIdShared = blockID;
   rotationShared = rotation;

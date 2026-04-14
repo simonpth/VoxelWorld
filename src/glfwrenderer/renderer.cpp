@@ -5,10 +5,18 @@
 
 #include "engine/enginecontext.h"
 
+static glm::vec3 skyColor = glm::vec3(0.0f, 0.75f, 1.0f);
+
 void Renderer::initialize(GLFWwindow *window) {
   m_firstRender = true;
 
   m_shader = std::make_unique<Shader>("shaders/shader.vert", "shaders/shader.frag");
+
+  m_shader->use();
+  m_shader->setVec3("fogColor", skyColor);
+  m_fogRenderDistance = Settings::instance().renderDistance() * Chunk::SIZE;
+  m_shader->setFloat("fogStart", m_fogRenderDistance - Chunk::SIZE);
+  m_shader->setFloat("fogEnd", m_fogRenderDistance);
 
   m_debugUI.initialize(window);
 }
@@ -39,11 +47,23 @@ void Renderer::render() {
   m_frustum.extractFrustum(vp);
 
   // Render the chunks
-  glClearColor(0.0f, 0.75f, 1.0f, 1.0f);
+  glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Render solids
   m_shader->use();
+
+  // Update fog parameters in case render distance changed
+  int renderDistance = Settings::instance().renderDistance() * Chunk::SIZE;
+  if (m_fogRenderDistance != renderDistance) {
+    m_fogRenderDistance = renderDistance;
+    int fogDelta = Chunk::SIZE;
+    if (m_fogRenderDistance > 18) {
+      fogDelta = 2 * Chunk::SIZE;
+    }
+    m_shader->setFloat("fogStart", m_fogRenderDistance - fogDelta);
+    m_shader->setFloat("fogEnd", m_fogRenderDistance);
+  }
 
   glDisable(GL_BLEND);
   // glEnable(GL_CULL_FACE);

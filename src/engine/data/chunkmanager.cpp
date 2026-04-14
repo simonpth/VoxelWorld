@@ -96,6 +96,10 @@ void ChunkManager::setRenderDistance(int distance) {
   m_relativeChunkOffsets.reserve((2 * distance + 1) * (2 * distance + 1) * World::CHUNKHEIGHT);
   for (int z = -distance; z <= distance; ++z) {
     for (int x = -distance; x <= distance; ++x) {
+      int distanceAndOne = distance + 1;
+      if(x*x + z*z >= distanceAndOne * distanceAndOne) {
+        continue; // Skip chunks outside the circular render distance
+      }
       for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
         m_relativeChunkOffsets.push_back(ChunkPosition(x, y, z));
       }

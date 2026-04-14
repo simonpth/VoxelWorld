@@ -3,6 +3,12 @@
 flat in uint blockIdShared;
 flat in uint rotationShared;
 
+in vec3 relFragPos;
+
+uniform vec3 fogColor;
+uniform float fogStart;
+uniform float fogEnd;
+
 out vec4 FragColor;
 
 vec3 colors[4] = vec3[](
@@ -32,5 +38,14 @@ float getLighting(uint rotation) {
 }
 
 void main() {
-  FragColor = vec4(colors[blockIdShared] * getLighting(rotationShared), 1.0);
+  vec3 color = colors[blockIdShared] * getLighting(rotationShared);
+
+  vec3 vertPos = relFragPos; // position of the fragment in world space
+  vertPos.y = 0.0;
+  float distance = length(vertPos); // distance from camera in xz-plane
+  float fogFactor = clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+
+  color = mix(color, fogColor, fogFactor);
+
+  FragColor = vec4(color, 1.0);
 }

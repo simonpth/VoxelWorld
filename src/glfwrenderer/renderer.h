@@ -48,6 +48,9 @@ private:
 
   // Dear ImGui resources
   DebugUI m_debugUI;
+
+  // Fog
+  int m_fogRenderDistance;
 };
 
 #endif // RENDERER_H
