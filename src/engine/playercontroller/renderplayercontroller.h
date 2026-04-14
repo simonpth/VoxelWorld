@@ -16,7 +16,7 @@ public:
   RenderPlayerController() {
     m_position = glm::vec3(0.0f, 0.0f, 0.0f);
     m_rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-    m_currentChunk = PlayerChunkPos(0, 8, 0);
+    m_currentChunk = PlayerChunkPos(0, 3, 0);
 
     m_front = glm::vec3(0, 0, -1);
     m_up = glm::vec3(0, 1, 0);

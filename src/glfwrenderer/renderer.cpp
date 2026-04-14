@@ -28,13 +28,15 @@ void Renderer::render() {
   glm::vec3 playerPos = playerController->position();
 
   float aspectRatio = static_cast<float>(m_windowWidth.load()) / static_cast<float>(m_windowHeight.load());
-  glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
+  glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 2000.0f);
   glm::mat4 view = glm::lookAt(
       playerPos,
       playerPos + playerController->front(),
       playerController->up());
 
   glm::mat4 vp = projection * view;
+
+  m_frustum.extractFrustum(vp);
 
   // Render the chunks
   glClearColor(0.0f, 0.75f, 1.0f, 1.0f);
@@ -81,6 +83,13 @@ void Renderer::render() {
     float relativeX = (chunkPos.x - currentChunkPos.x) * Chunk::SIZE;
     float relativeY = (chunkPos.y - currentChunkPos.y) * Chunk::SIZE;
     float relativeZ = (chunkPos.z - currentChunkPos.z) * Chunk::SIZE;
+
+    if (!m_frustum.aabbInFrustum(
+            glm::vec3(relativeX, relativeY, relativeZ),
+            glm::vec3(relativeX + Chunk::SIZE, relativeY + Chunk::SIZE, relativeZ + Chunk::SIZE))) {
+      continue; // Skip chunks outside the view frustum
+    }
+
     m_shader->setVec3("relativeChunkPos", relativeX, relativeY, relativeZ);
     chunkMesh->render();
   }

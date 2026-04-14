@@ -5,6 +5,7 @@
 #include "engine/playercontroller/renderplayercontroller.h"
 #include "shader.h"
 #include "debugui.h"
+#include "frustum.h"
 
 #include <atomic>
 #include <chrono>
@@ -42,6 +43,8 @@ private:
   std::unordered_map<ChunkPosition, std::unique_ptr<ChunkRenderMesh>> m_chunkMeshes;
 
   int m_chunkManagerChunkVersion = 0; // Version of chunk data currently rendered
+
+  Frustum m_frustum; // For culling
 
   // Dear ImGui resources
   DebugUI m_debugUI;
