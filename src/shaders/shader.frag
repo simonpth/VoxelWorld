@@ -9,14 +9,9 @@ uniform vec3 fogColor;
 uniform float fogStart;
 uniform float fogEnd;
 
-out vec4 FragColor;
+uniform samplerBuffer blockTextureTBO;
 
-vec3 colors[4] = vec3[](
-  vec3(0.5, 0.5, 0.5), // gray for block ID 0
-  vec3(1.0, 0.0, 0.0), // red
-  vec3(0.0, 0.58, 0.106), // green
-  vec3(0.0, 0.0, 1.0)  // blue
-);
+out vec4 FragColor;
 
 // calculate lighting based on face rotation (simplified)
 
@@ -38,7 +33,11 @@ float getLighting(uint rotation) {
 }
 
 void main() {
-  vec3 color = colors[blockIdShared] * getLighting(rotationShared);
+  uint baseIndex = blockIdShared * 4; // 6 faces per block
+
+  vec4 baseColor = texelFetch(blockTextureTBO, int(baseIndex + 3)).rgba; // base color
+
+  vec3 color = baseColor.rgb * getLighting(rotationShared);
 
   vec3 vertPos = relFragPos; // position of the fragment in world space
   vertPos.y = 0.0;
@@ -47,5 +46,5 @@ void main() {
 
   color = mix(color, fogColor, fogFactor);
 
-  FragColor = vec4(color, 1.0);
+  FragColor = vec4(color, baseColor.a);
 }

@@ -3,7 +3,7 @@
 
 #include "engine/data/chunkvertices.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 #include <shared_mutex>
 #include <vector>

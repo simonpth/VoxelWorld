@@ -19,6 +19,10 @@ void Renderer::initialize(GLFWwindow *window) {
   m_shader->setFloat("fogEnd", m_fogRenderDistance);
 
   m_debugUI.initialize(window);
+
+  m_blockRegistryTBO.initialize(EngineContext::instance().engine()->blockRegistry());
+
+  m_shader->setInt("blockTextureTBO", 0); // Texture unit 0
 }
 
 void Renderer::render() {
@@ -53,13 +57,16 @@ void Renderer::render() {
   // Render solids
   m_shader->use();
 
+  // Bind the block registry texture buffer object to texture unit 0
+  m_blockRegistryTBO.bind(0);
+
   // Update fog parameters in case render distance changed
   int renderDistance = Settings::instance().renderDistance() * Chunk::SIZE;
   if (m_fogRenderDistance != renderDistance) {
     m_fogRenderDistance = renderDistance;
-    int fogDelta = Chunk::SIZE;
+    int fogDelta = 3 * Chunk::SIZE;
     if (m_fogRenderDistance > 18) {
-      fogDelta = 2 * Chunk::SIZE;
+      fogDelta = 6 * Chunk::SIZE;
     }
     m_shader->setFloat("fogStart", m_fogRenderDistance - fogDelta);
     m_shader->setFloat("fogEnd", m_fogRenderDistance);

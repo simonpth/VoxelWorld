@@ -1,6 +1,6 @@
 #include "debugui.h"
-#include "engine/settings.h"
 #include "engine/enginecontext.h"
+#include "engine/settings.h"
 
 void DebugUI::initialize(GLFWwindow *window) {
   IMGUI_CHECKVERSION();
@@ -12,16 +12,16 @@ void DebugUI::initialize(GLFWwindow *window) {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 410");
 
+  Settings &settings = Settings::instance();
+  m_renderDistance = settings.renderDistance();
+  m_vsync = settings.vsync();
+  m_playerSpeed = settings.playerSpeed();
+
   if (m_vsync) {
     glfwSwapInterval(1);
   } else {
     glfwSwapInterval(0);
   }
-
-  Settings &settings = Settings::instance();
-  m_renderDistance = settings.renderDistance();
-  m_vsync = settings.vsync();
-  m_playerSpeed = settings.playerSpeed();
 }
 
 void DebugUI::newFrame() {

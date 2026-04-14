@@ -1,4 +1,5 @@
 #include "chunkmeshing.h"
+#include "engine/enginecontext.h"
 
 std::unique_ptr<ChunkMeshingData> ChunkMeshing::requestChunkMeshingData(World *world, const ChunkPosition &pos) {
   // generate needed chunks if they don't exist
@@ -98,7 +99,8 @@ std::unique_ptr<ChunkMeshingData> ChunkMeshing::requestChunkMeshingData(World *w
 }
 
 uint64_t generateVertex(int id, int x, int y, int z, int width, int height, int rotation) {
-  return ((static_cast<uint64_t>(id) & 0xFFFF) << 48) |
+  uint32_t atlasIndex = EngineContext::instance().engine()->blockRegistry().getAtlasIndex(id);
+  return ((static_cast<uint64_t>(atlasIndex) & 0xFFFF) << 48) |
          ((static_cast<uint64_t>(x) & 0xFF) << 40) |
          ((static_cast<uint64_t>(y) & 0xFF) << 32) |
          ((static_cast<uint64_t>(z) & 0xFF) << 24) |

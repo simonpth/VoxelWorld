@@ -4,6 +4,7 @@
 #include "playercontroller/renderplayercontroller.h"
 #include "data/world.h"
 #include "data/chunkmanager.h"
+#include "data/blockregistry.h"
 
 #include <atomic>
 #include <memory>
@@ -25,6 +26,8 @@ public:
 
   // DO NOT CALL THIS FROM ANY THREAD OTHER THAN THE RENDERING THREAD OR GAMELOOP THREAD
   ChunkManager *chunkManager() { return m_chunkManager.get(); }
+
+  const BlockRegistry &blockRegistry() const { return m_blockRegistry; }
 private:
   std::atomic<bool> m_running = false;
   void gameLoop();
@@ -35,6 +38,7 @@ private:
 
   std::unique_ptr<PlayerControllerInterface> m_playerController;
   std::unique_ptr<ChunkManager> m_chunkManager;
+  BlockRegistry m_blockRegistry;
 
   tf::Executor m_executor;
 };

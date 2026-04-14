@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
   src/main.cpp
 
+  src/glfwrenderer/blockregistrytbo.cpp
   src/glfwrenderer/chunkrendermesh.cpp
   src/glfwrenderer/renderer.cpp
   src/glfwrenderer/app.cpp
@@ -18,6 +19,7 @@ set(SOURCES
 
   src/engine/data/chunkmanager.cpp
   src/engine/data/world.cpp
+  src/engine/data/blockregistry.cpp
 
   src/engine/playercontroller/playercontroller.cpp
 

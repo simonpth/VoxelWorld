@@ -15,6 +15,7 @@ private:
   ChunkGeneration();
   
   FastNoise::SmartNode<> generator;
+  FastNoise::SmartNode<FastNoise::Simplex> snow;
   int seed = 1337;
 };
 

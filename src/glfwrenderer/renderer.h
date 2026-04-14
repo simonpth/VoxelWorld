@@ -6,6 +6,7 @@
 #include "shader.h"
 #include "debugui.h"
 #include "frustum.h"
+#include "blockregistrytbo.h"
 
 #include <atomic>
 #include <chrono>
@@ -51,6 +52,9 @@ private:
 
   // Fog
   int m_fogRenderDistance;
+
+  // Textures
+  BlockRegistryTBO m_blockRegistryTBO;
 };
 
 #endif // RENDERER_H
