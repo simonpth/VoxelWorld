@@ -1,5 +1,6 @@
 #include "debugui.h"
 #include "engine/settings.h"
+#include "engine/enginecontext.h"
 
 void DebugUI::initialize(GLFWwindow *window) {
   IMGUI_CHECKVERSION();
@@ -45,6 +46,9 @@ void DebugUI::cleanup() {
 void DebugUI::drawWidgets() {
   ImGui::Begin("Debug");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+
+  glm::vec3 worldPos = EngineContext::instance().engine()->playerController()->worldPosition();
+  ImGui::Text("World Pos: (%.1f, %.1f, %.1f)", worldPos.x, worldPos.y, worldPos.z);
 
   if (ImGui::SliderInt("Render Distance", &m_renderDistance, 1, 32)) {
     Settings::instance().setRenderDistance(m_renderDistance);
