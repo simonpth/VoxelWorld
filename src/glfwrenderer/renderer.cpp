@@ -25,6 +25,8 @@ void Renderer::initialize(GLFWwindow *window) {
 
   m_textureAtlas.initialize("shaders/textures/atlas.png");
   m_shader->setInt("blockTextureAtlas", 1); // Texture unit 1
+
+  m_shader->setFloat("planetRadius", 1303.7972938461f); // Example planet radius, adjust as needed
 }
 
 void Renderer::render() {
@@ -35,7 +37,6 @@ void Renderer::render() {
   auto playerController = EngineContext::instance().engine()->playerController();
   playerController->update();
 
-  // Update loaded chunks if the player has moved to a different chunk
   PlayerChunkPos currentChunkPos = playerController->currentChunk();
 
   // Calculate the MVP matrix
@@ -59,6 +60,15 @@ void Renderer::render() {
   // Render solids
   m_shader->use();
 
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+
+  m_shader->setMat4("vp", vp);
+  m_shader->setFloat("playerWorldY", playerPos.y + currentChunkPos.y * Chunk::SIZE); // player world Y position
+  m_shader->setVec3("playerPos", playerPos); // player position relative to current chunk origin
+  m_shader->setBool("warpedWorld", Settings::instance().warpedWorld());
+
   // Bind the block registry texture buffer object to texture unit 0
   m_blockRegistryTBO.bind(0);
   m_textureAtlas.bind(1);
@@ -74,12 +84,6 @@ void Renderer::render() {
     m_shader->setFloat("fogStart", m_fogRenderDistance - fogDelta);
     m_shader->setFloat("fogEnd", m_fogRenderDistance);
   }
-
-  glDisable(GL_BLEND);
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-
-  m_shader->setMat4("vp", vp);
 
   auto chunkManager = EngineContext::instance().engine()->chunkManager();
 
@@ -114,11 +118,13 @@ void Renderer::render() {
     float relativeY = (chunkPos.y - currentChunkPos.y) * Chunk::SIZE;
     float relativeZ = (chunkPos.z - currentChunkPos.z) * Chunk::SIZE;
 
+    /*
     if (!m_frustum.aabbInFrustum(
             glm::vec3(relativeX, relativeY, relativeZ),
             glm::vec3(relativeX + Chunk::SIZE, relativeY + Chunk::SIZE, relativeZ + Chunk::SIZE))) {
       continue; // Skip chunks outside the view frustum
     }
+    */
 
     m_shader->setVec3("relativeChunkPos", relativeX, relativeY, relativeZ);
     chunkMesh->render();

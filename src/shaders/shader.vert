@@ -2,14 +2,20 @@
 
 layout(location = 0) in uvec2 data;
 
+uniform float planetRadius;
+
 uniform vec3 relativeChunkPos;
+
+uniform float playerWorldY;
+uniform vec3 playerPos; // relative to current chunk origin
+uniform bool warpedWorld; // whether to apply spherical warping
 uniform mat4 vp;
 
 flat out uint blockIdShared;
 flat out uint rotationShared;
 out vec2 uvShared;
-
-out vec3 relFragPos;
+out float horizontalDistance;
+out vec3 relPosShared;
 
 // array of 6 * 4 vertices (x, y, z) for each block face instance
 const vec3 cornors[8] = vec3[](
@@ -75,8 +81,29 @@ void main() {
   uint rotation = (data.x >> 3) & 0x1Fu;
 
   vec3 facePos = cornors[indices[rotation * 4u + uint(gl_VertexID)]];
-  relFragPos = facePos + vec3(x, y, z) / 8 + relativeChunkPos;
-  gl_Position = vp * vec4(relFragPos, 1.0);
+  vec3 relCurrentPlayerChunkPos = facePos + vec3(x, y, z) / 8 + relativeChunkPos; // position relative to the origin of the currentPlayerChunk
+  vec3 relPos = relCurrentPlayerChunkPos - playerPos; // position relative to the player
+
+  vec3 finalPos;
+
+  horizontalDistance = length(relPos.xz);
+
+  if(warpedWorld) {
+    // Warp the vertex position to create a spherical world effect
+    float theta = horizontalDistance / planetRadius;
+    float r = planetRadius + playerWorldY + relPos.y;
+    vec2 xzDir = horizontalDistance > 0.0 ? normalize(relPos.xz) : vec2(0.0);
+
+    vec3 sphereCenter = vec3(0, -(planetRadius + playerWorldY), 0);
+    vec3 warped = sphereCenter + r * vec3(sin(theta) * xzDir.x, cos(theta), sin(theta) * xzDir.y);
+
+    finalPos = warped + playerPos; // convert back to relCurrentPlayerChunkPos coordinates
+  } else {
+    finalPos = relCurrentPlayerChunkPos;
+  }
+
+  gl_Position = vp * vec4(finalPos, 1.0);
+  relPosShared = finalPos;
 
   uvShared = UVs[gl_VertexID];
 

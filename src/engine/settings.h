@@ -18,10 +18,14 @@ public:
 
   float playerSpeed() const { return m_playerSpeed.load(); }
   void setPlayerSpeed(float speed) { m_playerSpeed.store(speed); }
+
+  bool warpedWorld() const { return m_warpedWorld.load(); }
+  void setWarpedWorld(bool enabled) { m_warpedWorld.store(enabled); }
 private:
   // Add any settings you want to store here, e.g.:
   std::atomic<int> m_renderDistance = 8;
   std::atomic<bool> m_vsync = true;
+  std::atomic<bool> m_warpedWorld = true;
 
   std::atomic<float> m_playerSpeed = 20.0f; // units per second
 

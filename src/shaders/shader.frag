@@ -2,17 +2,16 @@
 
 flat in uint blockIdShared;
 flat in uint rotationShared;
-
 in vec2 uvShared;
 
-in vec3 relFragPos;
+in float horizontalDistance;
+in vec3 relPosShared;
 
 uniform vec3 fogColor;
 uniform float fogStart;
 uniform float fogEnd;
 
 uniform samplerBuffer blockTextureTBO;
-
 uniform sampler2D blockTextureAtlas;
 
 out vec4 FragColor;
@@ -57,7 +56,7 @@ void main() {
   vec2 atlasUV = (baseUV + clamp(uvShared, 0.05, 0.95)) / 64.0; // 64x64 blocks in atlas, clamp to avoid bleeding
 
   vec4 baseColor;
-  if(true) {
+  if(length(relPosShared) < 256.0) { // use atlas for nearby blocks
     baseColor = texture(blockTextureAtlas, atlasUV);
   } else {
     baseColor = texelFetch(blockTextureTBO, int(baseIndex + 3)).rgba; // base color
@@ -65,11 +64,7 @@ void main() {
 
   vec3 color = baseColor.rgb * getLighting(rotationShared);
 
-  vec3 vertPos = relFragPos; // position of the fragment in world space
-  vertPos.y = 0.0;
-  float distance = length(vertPos); // distance from camera in xz-plane
-  float fogFactor = clamp((distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-
+  float fogFactor = clamp((horizontalDistance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
   color = mix(color, fogColor, fogFactor);
 
   FragColor = vec4(color, baseColor.a);

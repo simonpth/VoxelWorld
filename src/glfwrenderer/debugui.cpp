@@ -16,7 +16,7 @@ void DebugUI::initialize(GLFWwindow *window) {
   m_renderDistance = settings.renderDistance();
   m_vsync = settings.vsync();
   m_playerSpeed = settings.playerSpeed();
-
+  m_warpedWorld = settings.warpedWorld();
   if (m_vsync) {
     glfwSwapInterval(1);
   } else {
@@ -65,6 +65,10 @@ void DebugUI::drawWidgets() {
 
   if (ImGui::SliderFloat("Player Speed", &m_playerSpeed, 1.0f, 100.0f)) {
     Settings::instance().setPlayerSpeed(m_playerSpeed);
+  }
+
+  if (ImGui::Checkbox("Warped World", &m_warpedWorld)) {
+    Settings::instance().setWarpedWorld(m_warpedWorld);
   }
 
   ImGui::End();
