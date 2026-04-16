@@ -17,6 +17,8 @@ void DebugUI::initialize(GLFWwindow *window) {
   m_vsync = settings.vsync();
   m_playerSpeed = settings.playerSpeed();
   m_warpedWorld = settings.warpedWorld();
+  m_textureFadeDistance = settings.textureFadeDistance();
+  m_textureFadeStrength = settings.textureFadeStrength();
   if (m_vsync) {
     glfwSwapInterval(1);
   } else {
@@ -63,12 +65,26 @@ void DebugUI::drawWidgets() {
     }
   }
 
-  if (ImGui::SliderFloat("Player Speed", &m_playerSpeed, 1.0f, 100.0f)) {
+  if (ImGui::SliderFloat("Player Speed", &m_playerSpeed, 1.0f, 300.0f)) {
     Settings::instance().setPlayerSpeed(m_playerSpeed);
   }
 
   if (ImGui::Checkbox("Warped World", &m_warpedWorld)) {
     Settings::instance().setWarpedWorld(m_warpedWorld);
+  }
+
+  if (ImGui::CollapsingHeader("Texture Settings")) {
+    if (ImGui::Checkbox("Use Textures", &m_useTextures)) {
+      Settings::instance().setUseTextures(m_useTextures);
+    }
+
+    if (ImGui::SliderFloat("Texture Fade Distance", &m_textureFadeDistance, 128.0f, 512.0f)) {
+      Settings::instance().setTextureFadeDistance(m_textureFadeDistance);
+    }
+
+    if (ImGui::SliderFloat("Texture Fade Strength", &m_textureFadeStrength, 0.5f, 5.0f)) {
+      Settings::instance().setTextureFadeStrength(m_textureFadeStrength);
+    }
   }
 
   ImGui::End();

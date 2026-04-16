@@ -3,7 +3,7 @@
 #include "engine/algorithm/chunkgeneration.h"
 
 void World::loadOrGenerateChunk(const ChunkPosition &pos) {
-  if (pos.y < 0 || pos.y >= CHUNKHEIGHT)
+  if (pos.y() < 0 || pos.y() >= CHUNKHEIGHT)
     return;
 
   {

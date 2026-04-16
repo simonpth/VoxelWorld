@@ -21,6 +21,9 @@ private:
   bool m_vsync; // local copy to drive the checkbox
   float m_playerSpeed; // local copy to drive the slider
   bool m_warpedWorld; // local copy to drive the checkbox
+  bool m_useTextures; // local copy to drive the checkbox
+  float m_textureFadeDistance; // local copy to drive the slider
+  float m_textureFadeStrength; // local copy to drive the slider
 };
 
 #endif // DEBUGUI_H

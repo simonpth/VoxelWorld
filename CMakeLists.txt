@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
   src/main.cpp
 
+  src/mainmenu/mainmenu.cpp
+
   src/glfwrenderer/blockregistrytbo.cpp
   src/glfwrenderer/chunkrendermesh.cpp
   src/glfwrenderer/renderer.cpp

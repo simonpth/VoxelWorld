@@ -8,13 +8,15 @@
 static glm::vec3 skyColor = glm::vec3(0.145f, 0.655f, 0.855f);
 
 void Renderer::initialize(GLFWwindow *window) {
+  const Settings &settings = Settings::instance();
   m_firstRender = true;
+  m_planetSizeInChunks = settings.planetSizeInChunks();
 
   m_shader = std::make_unique<Shader>("shaders/shader.vert", "shaders/shader.frag");
 
   m_shader->use();
   m_shader->setVec3("fogColor", skyColor);
-  m_fogRenderDistance = Settings::instance().renderDistance() * Chunk::SIZE;
+  m_fogRenderDistance = settings.renderDistance() * Chunk::SIZE;
   m_shader->setFloat("fogStart", m_fogRenderDistance - Chunk::SIZE);
   m_shader->setFloat("fogEnd", m_fogRenderDistance);
 
@@ -26,7 +28,7 @@ void Renderer::initialize(GLFWwindow *window) {
   m_textureAtlas.initialize("shaders/textures/atlas.png");
   m_shader->setInt("blockTextureAtlas", 1); // Texture unit 1
 
-  m_shader->setFloat("planetRadius", 1303.7972938461f); // Example planet radius, adjust as needed
+  m_shader->setFloat("planetRadius", settings.planetSizeInChunks() * Chunk::SIZE / 6.2831853072f); // Example planet radius, adjust as needed
 }
 
 void Renderer::render() {
@@ -64,17 +66,23 @@ void Renderer::render() {
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
 
+  const Settings &settings = Settings::instance();
+
   m_shader->setMat4("vp", vp);
-  m_shader->setFloat("playerWorldY", playerPos.y + currentChunkPos.y * Chunk::SIZE); // player world Y position
-  m_shader->setVec3("playerPos", playerPos); // player position relative to current chunk origin
-  m_shader->setBool("warpedWorld", Settings::instance().warpedWorld());
+  m_shader->setFloat("playerWorldY", playerPos.y + currentChunkPos.y() * Chunk::SIZE); // player world Y position
+  m_shader->setVec3("playerPos", playerPos);                                           // player position relative to current chunk origin
+  bool warpedWorld = settings.warpedWorld();
+  m_shader->setBool("warpedWorld", warpedWorld);
+  m_shader->setBool("useTextures", settings.useTextures());
+  m_shader->setFloat("textureFadeDistance", settings.textureFadeDistance());
+  m_shader->setFloat("textureFadeStrength", settings.textureFadeStrength());
 
   // Bind the block registry texture buffer object to texture unit 0
   m_blockRegistryTBO.bind(0);
   m_textureAtlas.bind(1);
 
   // Update fog parameters in case render distance changed
-  int renderDistance = Settings::instance().renderDistance() * Chunk::SIZE;
+  int renderDistance = settings.renderDistance() * Chunk::SIZE;
   if (m_fogRenderDistance != renderDistance) {
     m_fogRenderDistance = renderDistance;
     int fogDelta = 3 * Chunk::SIZE;
@@ -114,19 +122,38 @@ void Renderer::render() {
   for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes) {
     chunkMesh->uploadVerticesIfNeeded();
 
-    float relativeX = (chunkPos.x - currentChunkPos.x) * Chunk::SIZE;
-    float relativeY = (chunkPos.y - currentChunkPos.y) * Chunk::SIZE;
-    float relativeZ = (chunkPos.z - currentChunkPos.z) * Chunk::SIZE;
+    float relativeY = (chunkPos.y() - currentChunkPos.y()) * Chunk::SIZE;
 
-    /*
-    if (!m_frustum.aabbInFrustum(
-            glm::vec3(relativeX, relativeY, relativeZ),
-            glm::vec3(relativeX + Chunk::SIZE, relativeY + Chunk::SIZE, relativeZ + Chunk::SIZE))) {
+    float relativeXP, relativeXN, relativeZP, relativeZN;
+
+    if (chunkPos.x() <= currentChunkPos.x()) {
+      relativeXN = (chunkPos.x() - currentChunkPos.x()) * Chunk::SIZE;
+      relativeXP = relativeXN + m_planetSizeInChunks * Chunk::SIZE;
+    } else {
+      relativeXP = (chunkPos.x() - currentChunkPos.x()) * Chunk::SIZE;
+      relativeXN = relativeXP - m_planetSizeInChunks * Chunk::SIZE;
+    }
+
+    if (chunkPos.z() <= currentChunkPos.z()) {
+      relativeZN = (chunkPos.z() - currentChunkPos.z()) * Chunk::SIZE;
+      relativeZP = relativeZN + m_planetSizeInChunks * Chunk::SIZE;
+    } else {
+      relativeZP = (chunkPos.z() - currentChunkPos.z()) * Chunk::SIZE;
+      relativeZN = relativeZP - m_planetSizeInChunks * Chunk::SIZE;
+    }
+
+    float relativeX = std::abs(relativeXP) < std::abs(relativeXN) ? relativeXP : relativeXN;
+    float relativeZ = std::abs(relativeZP) < std::abs(relativeZN) ? relativeZP : relativeZN;
+
+    glm::vec3 relChunkPos = glm::vec3(relativeX, relativeY, relativeZ);
+
+    if (m_planetSizeInChunks >= 512 && !m_frustum.aabbInFrustum(
+                            relChunkPos,
+                            relChunkPos + glm::vec3(Chunk::SIZE, Chunk::SIZE, Chunk::SIZE))) {
       continue; // Skip chunks outside the view frustum
     }
-    */
 
-    m_shader->setVec3("relativeChunkPos", relativeX, relativeY, relativeZ);
+    m_shader->setVec3("relativeChunkPos", relChunkPos);
     chunkMesh->render();
   }
 

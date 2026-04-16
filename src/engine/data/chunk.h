@@ -2,6 +2,8 @@
 #define CHUNK_H
 
 #include "block.h"
+#include "engine/settings.h"
+
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -143,30 +145,51 @@ private:
 };
 
 struct ChunkPosition {
-  int16_t x, y, z;
-
   constexpr ChunkPosition(int16_t x = 0, int16_t y = 0, int16_t z = 0) noexcept
-      : x(x), y(y), z(z) {}
+      : m_x(x), m_y(y), m_z(z) {
+    if (this->m_x < 0)
+      this->m_x += m_planetSizeInChunks; // Wrap around for negative coordinates
+    if (this->m_z < 0)
+      this->m_z += m_planetSizeInChunks; // Wrap around for negative coordinates
+
+    this->m_x %= m_planetSizeInChunks; // Wrap around for positive coordinates
+    this->m_z %= m_planetSizeInChunks; // Wrap around for positive coordinates
+  }
 
   constexpr bool operator==(const ChunkPosition &other) const noexcept {
-    return x == other.x && y == other.y && z == other.z;
+    return x() == other.x() && y() == other.y() && z() == other.z();
   }
 
   constexpr ChunkPosition operator+(const ChunkPosition &other) const noexcept {
-    return ChunkPosition(x + other.x, y + other.y, z + other.z);
+    return ChunkPosition(x() + other.x(), y() + other.y(), z() + other.z());
   }
 
   constexpr ChunkPosition operator-(const ChunkPosition &other) const noexcept {
-    return ChunkPosition(x - other.x, y - other.y, z - other.z);
+    return ChunkPosition(x() - other.x(), y() - other.y(), z() - other.z());
   }
+
+  int16_t x() const noexcept { return m_x; }
+  int16_t y() const noexcept { return m_y; }
+  int16_t z() const noexcept { return m_z; }
+
+private:
+  int16_t m_x, m_y, m_z;
+  int m_planetSizeInChunks = Settings::instance().planetSizeInChunks(); // For world wrapping
+};
+
+struct ChunkPositionOffset {
+  int16_t x, y, z;
+
+  constexpr ChunkPositionOffset(int16_t x = 0, int16_t y = 0, int16_t z = 0) noexcept
+      : x(x), y(y), z(z) {}
 };
 
 namespace std {
 template <>
 struct hash<ChunkPosition> {
   constexpr size_t operator()(const ChunkPosition &pos) const noexcept {
-    return (static_cast<size_t>(pos.y) << 32) |
-           (static_cast<size_t>(pos.z) << 16) | pos.x;
+    return (static_cast<size_t>(pos.y()) << 32) |
+           (static_cast<size_t>(pos.z()) << 16) | pos.x();
   }
 };
 } // namespace std

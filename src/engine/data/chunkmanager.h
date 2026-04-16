@@ -47,7 +47,7 @@ public:
 private:
   void updateChunkAsync(const ChunkPosition &chunkPos, std::shared_ptr<ChunkVertices> vertices = nullptr);
 
-  std::vector<ChunkPosition> m_relativeChunkOffsets;
+  std::vector<ChunkPositionOffset> m_relativeChunkOffsets;
   std::shared_mutex m_relativeOffsetsMutex;
   std::unordered_map<ChunkPosition, std::shared_ptr<ChunkVertices>> m_chunkVertices;
   std::shared_mutex m_chunkVerticesMutex;

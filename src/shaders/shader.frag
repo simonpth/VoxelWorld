@@ -11,8 +11,14 @@ uniform vec3 fogColor;
 uniform float fogStart;
 uniform float fogEnd;
 
+uniform bool useTextures;
+
 uniform samplerBuffer blockTextureTBO;
 uniform sampler2D blockTextureAtlas;
+
+// Texture fade-out parameters
+uniform float textureFadeDistance = 256; // Distance at which textures start fading
+uniform float textureFadeStrength = 1.5;   // How quickly textures fade out (higher = faster fade)
 
 out vec4 FragColor;
 
@@ -56,10 +62,29 @@ void main() {
   vec2 atlasUV = (baseUV + clamp(uvShared, 0.05, 0.95)) / 64.0; // 64x64 blocks in atlas, clamp to avoid bleeding
 
   vec4 baseColor;
-  if(length(relPosShared) < 256.0) { // use atlas for nearby blocks
-    baseColor = texture(blockTextureAtlas, atlasUV);
+  vec4 textureColor = texelFetch(blockTextureTBO, int(baseIndex + 3)).rgba; // base color
+
+  if(useTextures) {
+    // Calculate texture fade factor based on distance
+    float distance = length(relPosShared);
+    float textureFadeFactor = 1.0;
+
+    if(distance > textureFadeDistance) {
+      float fadeRange = distance - textureFadeDistance;
+      textureFadeFactor = exp(-textureFadeStrength * fadeRange / textureFadeDistance);
+      textureFadeFactor = clamp(textureFadeFactor, 0.0, 1.0);
+    }
+
+    // Only fetch texture if we actually need it (fade factor > 0)
+    if(textureFadeFactor > 0.0) {
+      vec4 atlasColor = texture(blockTextureAtlas, atlasUV);
+      // Blend between solid color and atlas texture based on fade factor
+      baseColor = mix(textureColor, atlasColor, textureFadeFactor);
+    } else {
+      baseColor = textureColor;
+    }
   } else {
-    baseColor = texelFetch(blockTextureTBO, int(baseIndex + 3)).rgba; // base color
+    baseColor = textureColor;
   }
 
   vec3 color = baseColor.rgb * getLighting(rotationShared);

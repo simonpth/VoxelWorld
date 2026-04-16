@@ -21,14 +21,34 @@ public:
 
   bool warpedWorld() const { return m_warpedWorld.load(); }
   void setWarpedWorld(bool enabled) { m_warpedWorld.store(enabled); }
+
+  bool useTextures() const { return m_useTextures.load(); }
+  void setUseTextures(bool enabled) { m_useTextures.store(enabled); }
+
+  float textureFadeDistance() const { return m_textureFadeDistance.load(); }
+  void setTextureFadeDistance(float distance) { m_textureFadeDistance.store(distance); }
+  float textureFadeStrength() const { return m_textureFadeStrength.load(); }
+  void setTextureFadeStrength(float strength) { m_textureFadeStrength.store(strength); }
+
+  int worldSeed() const { return m_worldSeed.load(); }
+  void setWorldSeed(int seed) { m_worldSeed.store(seed); }
+
+  int planetSizeInChunks() const { return m_planetSizeInChunks.load(); }
+  void setPlanetSizeInChunks(int size) { m_planetSizeInChunks.store(size); }
 private:
   // Add any settings you want to store here, e.g.:
   std::atomic<int> m_renderDistance = 8;
   std::atomic<bool> m_vsync = true;
   std::atomic<bool> m_warpedWorld = true;
+  std::atomic<bool> m_useTextures = false;
+  std::atomic<float> m_textureFadeDistance = 256.0f; // Distance at which textures start fading
+  std::atomic<float> m_textureFadeStrength = 1.5f;   // How quickly textures fade out (higher = faster fade)
 
   std::atomic<float> m_playerSpeed = 20.0f; // units per second
 
+  // World generation settings - ONLY SET BEFORE ENGINE CREATION
+  std::atomic<int> m_worldSeed = 0;
+  std::atomic<int> m_planetSizeInChunks = 1024; // amount of chunks on one axis
 private:
   Settings() = default;
   ~Settings() = default;

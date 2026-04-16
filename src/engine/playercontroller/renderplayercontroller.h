@@ -49,9 +49,9 @@ public:
 
   glm::vec3 worldPosition() const override {
     std::lock_guard<std::mutex> lock(m_stateMutex);
-    return glm::vec3(m_currentChunk.x * Chunk::SIZE + m_position.x,
-                     m_currentChunk.y * Chunk::SIZE + m_position.y,
-                     m_currentChunk.z * Chunk::SIZE + m_position.z);
+    return glm::vec3(m_currentChunk.x() * Chunk::SIZE + m_position.x,
+                     m_currentChunk.y() * Chunk::SIZE + m_position.y,
+                     m_currentChunk.z() * Chunk::SIZE + m_position.z);
   }
 
   void setInputState(const PlayerControllerInput &state) override {
@@ -135,29 +135,29 @@ public:
 
       if (position.x < 0) {
         position.x += Chunk::SIZE;
-        currentChunk.x -= 1;
+        currentChunk.addX(-1);
         chunkChanged = true;
       } else if (position.x >= Chunk::SIZE) {
         position.x -= Chunk::SIZE;
-        currentChunk.x += 1;
+        currentChunk.addX(1);
         chunkChanged = true;
       }
       if (position.y < 0) {
         position.y += Chunk::SIZE;
-        currentChunk.y -= 1;
+        currentChunk.addY(-1);
         chunkChanged = true;
       } else if (position.y >= Chunk::SIZE) {
         position.y -= Chunk::SIZE;
-        currentChunk.y += 1;
+        currentChunk.addY(1);
         chunkChanged = true;
       }
       if (position.z < 0) {
         position.z += Chunk::SIZE;
-        currentChunk.z -= 1;
+        currentChunk.addZ(-1);
         chunkChanged = true;
       } else if (position.z >= Chunk::SIZE) {
         position.z -= Chunk::SIZE;
-        currentChunk.z += 1;
+        currentChunk.addZ(1);
         chunkChanged = true;
       }
 

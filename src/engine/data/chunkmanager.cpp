@@ -19,8 +19,8 @@ void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
   positions.reserve(m_relativeChunkOffsets.size());
   {
     std::shared_lock lock(m_relativeOffsetsMutex);
-    for (const ChunkPosition &offset : m_relativeChunkOffsets) {
-      ChunkPosition pos = ChunkPosition(playerChunkPos.x + offset.x, offset.y, playerChunkPos.z + offset.z);
+    for (const ChunkPositionOffset &offset : m_relativeChunkOffsets) {
+      ChunkPosition pos = ChunkPosition(playerChunkPos.x() + offset.x, offset.y, playerChunkPos.z() + offset.z);
       positions.insert(pos);
     }
   }
@@ -101,7 +101,7 @@ void ChunkManager::setRenderDistance(int distance) {
         continue; // Skip chunks outside the circular render distance
       }
       for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
-        m_relativeChunkOffsets.push_back(ChunkPosition(x, y, z));
+        m_relativeChunkOffsets.push_back(ChunkPositionOffset(x, y, z));
       }
     }
   }

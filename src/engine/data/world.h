@@ -53,9 +53,9 @@ public:
 
   // Utility functions for converting between world coordinates and chunk/block coordinates
   static glm::ivec3 chunkAndBlockPosToWorldPos(const ChunkPosition &chunkPos, const glm::ivec3 &blockPos) {
-    return glm::ivec3(chunkPos.x * Chunk::SIZE + blockPos.x,
-                      chunkPos.y * Chunk::SIZE + blockPos.y,
-                      chunkPos.z * Chunk::SIZE + blockPos.z);
+    return glm::ivec3(chunkPos.x() * Chunk::SIZE + blockPos.x,
+                      chunkPos.y() * Chunk::SIZE + blockPos.y,
+                      chunkPos.z() * Chunk::SIZE + blockPos.z);
   }
   static int floorDiv(int a, int b) {
     return a / b - (a % b != 0 && (a ^ b) < 0);

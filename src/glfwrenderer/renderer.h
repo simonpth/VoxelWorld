@@ -57,6 +57,9 @@ private:
   // Textures
   BlockRegistryTBO m_blockRegistryTBO;
   TextureAtlas m_textureAtlas;
+
+  // World Warping
+  int m_planetSizeInChunks;
 };
 
 #endif // RENDERER_H

@@ -16,7 +16,8 @@ private:
   
   FastNoise::SmartNode<> generator;
   FastNoise::SmartNode<FastNoise::Simplex> snow;
-  int seed = 1337;
+  int m_seed; // Store the seed used for generation
+  int m_planetSizeInChunks; // Store the planet size in chunks for calculating world wrapping
 };
 
 #endif // CHUNKGENERATION_H
