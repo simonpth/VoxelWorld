@@ -25,7 +25,7 @@ public:
   PlayerControllerInterface *playerController() { return m_playerController.get(); }
 
   // DO NOT CALL THIS FROM ANY THREAD OTHER THAN THE RENDERING THREAD OR GAMELOOP THREAD
-  ChunkManager *chunkManager() { return m_chunkManager.get(); }
+  ChunkManager &chunkManager() { return m_chunkManager; }
 
   const BlockRegistry &blockRegistry() const { return m_blockRegistry; }
 private:
@@ -37,7 +37,7 @@ private:
   std::shared_ptr<World> m_world;
 
   std::unique_ptr<PlayerControllerInterface> m_playerController;
-  std::unique_ptr<ChunkManager> m_chunkManager;
+  ChunkManager m_chunkManager;
   BlockRegistry m_blockRegistry;
 
   tf::Executor m_executor;

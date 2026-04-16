@@ -17,6 +17,9 @@ MainMenu::~MainMenu() {
 }
 
 bool MainMenu::init() {
+  // Set seed for randomization
+  srand(static_cast<unsigned int>(time(nullptr)));
+
   if (!glfwInit()) {
     std::cerr << "Failed to initialize GLFW\n";
     return false;
@@ -96,7 +99,7 @@ void MainMenu::renderUI() {
 
   ImGui::Text("Voxel World");
 
-  if (ImGui::SliderInt("Planet Size (chunks)", &m_planetSizeInChunks, 64, 1024)) {
+  if (ImGui::SliderInt("Planet Size (chunks)", &m_planetSizeInChunks, 32, 1024)) {
     Settings::instance().setPlanetSizeInChunks(m_planetSizeInChunks);
   }
 

@@ -8,6 +8,7 @@ ChunkManager::ChunkManager() {
 }
 
 ChunkManager::~ChunkManager() {
+  m_executor.wait_for_all();
 }
 
 void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {

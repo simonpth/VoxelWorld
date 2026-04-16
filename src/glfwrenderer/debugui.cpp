@@ -16,7 +16,8 @@ void DebugUI::initialize(GLFWwindow *window) {
   m_renderDistance = settings.renderDistance();
   m_vsync = settings.vsync();
   m_playerSpeed = settings.playerSpeed();
-  m_warpedWorld = settings.warpedWorld();
+  m_warpMode = settings.warpMode();
+  m_useTextures = settings.useTextures();
   m_textureFadeDistance = settings.textureFadeDistance();
   m_textureFadeStrength = settings.textureFadeStrength();
   if (m_vsync) {
@@ -69,8 +70,8 @@ void DebugUI::drawWidgets() {
     Settings::instance().setPlayerSpeed(m_playerSpeed);
   }
 
-  if (ImGui::Checkbox("Warped World", &m_warpedWorld)) {
-    Settings::instance().setWarpedWorld(m_warpedWorld);
+  if (ImGui::Combo("Warp Mode", &m_warpMode, "Flat\0Plane to Sphere\0Curvature-based\0")) {
+    Settings::instance().setWarpMode(m_warpMode);
   }
 
   if (ImGui::CollapsingHeader("Texture Settings")) {

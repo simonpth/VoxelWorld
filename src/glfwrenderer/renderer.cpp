@@ -45,7 +45,7 @@ void Renderer::render() {
   glm::vec3 playerPos = playerController->position();
 
   float aspectRatio = static_cast<float>(m_windowWidth.load()) / static_cast<float>(m_windowHeight.load());
-  glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 2000.0f);
+  glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 7500.0f);
   glm::mat4 view = glm::lookAt(
       playerPos,
       playerPos + playerController->front(),
@@ -71,8 +71,8 @@ void Renderer::render() {
   m_shader->setMat4("vp", vp);
   m_shader->setFloat("playerWorldY", playerPos.y + currentChunkPos.y() * Chunk::SIZE); // player world Y position
   m_shader->setVec3("playerPos", playerPos);                                           // player position relative to current chunk origin
-  bool warpedWorld = settings.warpedWorld();
-  m_shader->setBool("warpedWorld", warpedWorld);
+  int warpMode = settings.warpMode();
+  m_shader->setInt("warpMode", warpMode);
   m_shader->setBool("useTextures", settings.useTextures());
   m_shader->setFloat("textureFadeDistance", settings.textureFadeDistance());
   m_shader->setFloat("textureFadeStrength", settings.textureFadeStrength());
@@ -93,14 +93,14 @@ void Renderer::render() {
     m_shader->setFloat("fogEnd", m_fogRenderDistance);
   }
 
-  auto chunkManager = EngineContext::instance().engine()->chunkManager();
+  ChunkManager &chunkManager = EngineContext::instance().engine()->chunkManager();
 
-  if (chunkManager->loadedChunkVersion() != m_chunkManagerChunkVersion) {
-    m_chunkManagerChunkVersion = chunkManager->loadedChunkVersion();
+  if (chunkManager.loadedChunkVersion() != m_chunkManagerChunkVersion) {
+    m_chunkManagerChunkVersion = chunkManager.loadedChunkVersion();
 
     std::queue<LoadedChunkUpdate> updates;
     {
-      LoadedChunkUpdatesReadHandle handle = chunkManager->getLoadedChunkUpdates();
+      LoadedChunkUpdatesReadHandle handle = chunkManager.getLoadedChunkUpdates();
       std::swap(updates, *handle.loadedChunkUpdates);
     }
 
@@ -147,7 +147,7 @@ void Renderer::render() {
 
     glm::vec3 relChunkPos = glm::vec3(relativeX, relativeY, relativeZ);
 
-    if (m_planetSizeInChunks >= 512 && !m_frustum.aabbInFrustum(
+    if (m_planetSizeInChunks >= 256 && !m_frustum.aabbInFrustum(
                             relChunkPos,
                             relChunkPos + glm::vec3(Chunk::SIZE, Chunk::SIZE, Chunk::SIZE))) {
       continue; // Skip chunks outside the view frustum

@@ -8,7 +8,7 @@ uniform vec3 relativeChunkPos;
 
 uniform float playerWorldY;
 uniform vec3 playerPos; // relative to current chunk origin
-uniform bool warpedWorld; // whether to apply spherical warping
+uniform int warpMode; // 0 = flat, 1 = plane to sphere mapping, 2 = only move y down based on curvature
 uniform mat4 vp;
 
 flat out uint blockIdShared;
@@ -88,17 +88,22 @@ void main() {
 
   horizontalDistance = length(relPos.xz);
 
-  if(warpedWorld) {
+  if(warpMode == 1) {
     // Warp the vertex position to create a spherical world effect
     float theta = horizontalDistance / planetRadius;
     float r = planetRadius + playerWorldY + relPos.y;
     vec2 xzDir = horizontalDistance > 0.0 ? normalize(relPos.xz) : vec2(0.0);
 
     vec3 sphereCenter = vec3(0, -(planetRadius + playerWorldY), 0);
-    vec3 warped = sphereCenter + r * vec3(sin(theta) * xzDir.x, cos(theta), sin(theta) * xzDir.y);
+    vec3 warped = sphereCenter + r * normalize(vec3(sin(theta) * xzDir.x, cos(theta), sin(theta) * xzDir.y));
 
     finalPos = warped + playerPos; // convert back to relCurrentPlayerChunkPos coordinates
+  } else if (warpMode == 2) {
+    // Alternative warping method that keeps the vertex at the same horizontal distance but adjusts the height based on the curvature
+    finalPos = relCurrentPlayerChunkPos;
+    finalPos.y -= (horizontalDistance * horizontalDistance) / (2.0 * planetRadius);
   } else {
+    // No warping, flat world
     finalPos = relCurrentPlayerChunkPos;
   }
 

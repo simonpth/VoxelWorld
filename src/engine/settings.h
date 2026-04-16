@@ -19,8 +19,8 @@ public:
   float playerSpeed() const { return m_playerSpeed.load(); }
   void setPlayerSpeed(float speed) { m_playerSpeed.store(speed); }
 
-  bool warpedWorld() const { return m_warpedWorld.load(); }
-  void setWarpedWorld(bool enabled) { m_warpedWorld.store(enabled); }
+  int warpMode() const { return m_warpMode.load(); }
+  void setWarpMode(int mode) { m_warpMode.store(mode); }
 
   bool useTextures() const { return m_useTextures.load(); }
   void setUseTextures(bool enabled) { m_useTextures.store(enabled); }
@@ -39,7 +39,7 @@ private:
   // Add any settings you want to store here, e.g.:
   std::atomic<int> m_renderDistance = 8;
   std::atomic<bool> m_vsync = true;
-  std::atomic<bool> m_warpedWorld = true;
+  std::atomic<int> m_warpMode = 0; // 0 = flat, 1 = plane to sphere mapping, 2 = only move y down based on curvature
   std::atomic<bool> m_useTextures = false;
   std::atomic<float> m_textureFadeDistance = 256.0f; // Distance at which textures start fading
   std::atomic<float> m_textureFadeStrength = 1.5f;   // How quickly textures fade out (higher = faster fade)

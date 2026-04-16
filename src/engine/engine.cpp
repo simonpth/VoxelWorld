@@ -9,10 +9,10 @@
 Engine::Engine() {
   m_world = std::make_shared<World>();
   m_playerController = std::make_unique<RenderPlayerController>();
-  m_chunkManager = std::make_unique<ChunkManager>();
 }
 
 Engine::~Engine() {
+  m_executor.wait_for_all();
 }
 
 // Main game loop with fixed time step, calls tick() every 20ms
@@ -53,15 +53,15 @@ void Engine::tick() {
   updateTaskflow.emplace([this]() {
     if (m_playerController->chunkChanged()) {
       m_playerController->resetChunkChanged();
-      m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
+      m_chunkManager.updateLoadedMeshes(m_playerController->currentChunk());
     }
   });
 
   // Check if the render distance has changed -> update loaded chunks
   updateTaskflow.emplace([this]() {
-    if (m_chunkManager->renderDistance() != Settings::instance().renderDistance()) {
-      m_chunkManager->setRenderDistance(Settings::instance().renderDistance());
-      m_chunkManager->updateLoadedMeshes(m_playerController->currentChunk());
+    if (m_chunkManager.renderDistance() != Settings::instance().renderDistance()) {
+      m_chunkManager.setRenderDistance(Settings::instance().renderDistance());
+      m_chunkManager.updateLoadedMeshes(m_playerController->currentChunk());
     }
   });
 
@@ -73,7 +73,7 @@ void Engine::tick() {
     worldPos.x = std::round(pos.x) + playerChunkPos.x() * Chunk::SIZE;
     worldPos.y = std::round(pos.y) + playerChunkPos.y() * Chunk::SIZE;
     worldPos.z = std::round(pos.z) + playerChunkPos.z() * Chunk::SIZE;
-    m_chunkManager->setBlockAndUpdate(worldPos, Block(4));
+    // m_chunkManager.setBlockAndUpdate(worldPos, Block(4));
   });
 
   // Wait for all update tasks to finish before the next tick
