@@ -70,7 +70,7 @@ void DebugUI::drawWidgets() {
     Settings::instance().setPlayerSpeed(m_playerSpeed);
   }
 
-  if (ImGui::Combo("Warp Mode", &m_warpMode, "Flat\0Plane to Sphere\0Curvature-based\0")) {
+  if (ImGui::Combo("Warp Mode", &m_warpMode, "Flat - No warp\0Warp plane to sphere\0Only move y based on distance\0")) {
     Settings::instance().setWarpMode(m_warpMode);
   }
 

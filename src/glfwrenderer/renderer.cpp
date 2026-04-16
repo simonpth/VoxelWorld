@@ -147,10 +147,18 @@ void Renderer::render() {
 
     glm::vec3 relChunkPos = glm::vec3(relativeX, relativeY, relativeZ);
 
-    if (m_planetSizeInChunks >= 256 && !m_frustum.aabbInFrustum(
-                            relChunkPos,
-                            relChunkPos + glm::vec3(Chunk::SIZE, Chunk::SIZE, Chunk::SIZE))) {
-      continue; // Skip chunks outside the view frustum
+    if (warpMode == 0) {
+      if (!m_frustum.aabbInFrustum(
+              relChunkPos,
+              relChunkPos + glm::vec3(Chunk::SIZE, Chunk::SIZE, Chunk::SIZE))) {
+        continue; // Skip chunks outside the view frustum
+      }
+    } else { // For warped world, use a larger bounding box for frustum culling to account for distortion at the edges of the view
+      if (!m_frustum.aabbInFrustum(
+              relChunkPos - glm::vec3(Chunk::SIZE, Chunk::SIZE, Chunk::SIZE) * (6.0f / warpMode),
+              relChunkPos + glm::vec3(Chunk::SIZE, Chunk::SIZE, Chunk::SIZE) * ((6.0f / warpMode) + 1.0f))) {
+        continue; // Skip chunks outside the view frustum
+      }
     }
 
     m_shader->setVec3("relativeChunkPos", relChunkPos);

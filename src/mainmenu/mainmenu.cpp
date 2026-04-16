@@ -82,6 +82,7 @@ void MainMenu::run() {
   }
 }
 
+// Renders the main menu UI using ImGui - mostly AI
 void MainMenu::renderUI() {
   ImGuiViewport *viewport = ImGui::GetMainViewport();
 
@@ -99,8 +100,34 @@ void MainMenu::renderUI() {
 
   ImGui::Text("Voxel World");
 
-  if (ImGui::SliderInt("Planet Size (chunks)", &m_planetSizeInChunks, 32, 1024)) {
-    Settings::instance().setPlanetSizeInChunks(m_planetSizeInChunks);
+  // Dropdown for planet size (powers of 2 only: 32, 64, 128, 256, 512, 1024)
+  const char* planetSizeItems[] = {"32", "64", "128", "256", "512", "1024"};
+  int currentPlanetSizeIndex = 0;
+
+  // Find current index
+  switch (m_planetSizeInChunks) {
+    case 32: currentPlanetSizeIndex = 0; break;
+    case 64: currentPlanetSizeIndex = 1; break;
+    case 128: currentPlanetSizeIndex = 2; break;
+    case 256: currentPlanetSizeIndex = 3; break;
+    case 512: currentPlanetSizeIndex = 4; break;
+    case 1024: currentPlanetSizeIndex = 5; break;
+    default: currentPlanetSizeIndex = 0; break;
+  }
+
+  if (ImGui::BeginCombo("Planet Size (chunks)", planetSizeItems[currentPlanetSizeIndex])) {
+    for (int i = 0; i < IM_ARRAYSIZE(planetSizeItems); i++) {
+      bool isSelected = (currentPlanetSizeIndex == i);
+      if (ImGui::Selectable(planetSizeItems[i], isSelected)) {
+        currentPlanetSizeIndex = i;
+        m_planetSizeInChunks = atoi(planetSizeItems[i]);
+        Settings::instance().setPlanetSizeInChunks(m_planetSizeInChunks);
+      }
+      if (isSelected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+    ImGui::EndCombo();
   }
 
   if (ImGui::Button("Randomize World Seed")) {
@@ -108,8 +135,15 @@ void MainMenu::renderUI() {
     Settings::instance().setWorldSeed(m_worldSeed);
   }
 
-  if (ImGui::SliderInt("World Seed", &m_worldSeed, 0, 1000000)) {
-    Settings::instance().setWorldSeed(m_worldSeed);
+  // Text input for world seed (positive integers only)
+  char seedBuffer[32];
+  snprintf(seedBuffer, sizeof(seedBuffer), "%d", m_worldSeed);
+  if (ImGui::InputText("World Seed", seedBuffer, sizeof(seedBuffer), ImGuiInputTextFlags_CharsDecimal)) {
+    int newSeed = atoi(seedBuffer);
+    if (newSeed >= 0) {  // Only accept positive integers
+      m_worldSeed = newSeed;
+      Settings::instance().setWorldSeed(m_worldSeed);
+    }
   }
 
   if (ImGui::Button("Start Game")) {
