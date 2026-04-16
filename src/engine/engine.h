@@ -11,6 +11,11 @@
 
 #include <taskflow/taskflow.hpp>
 
+struct BlockAction {
+  glm::ivec3 blockPos;
+  bool place; // true for place, false for break
+};
+
 class Engine
 {
 public:
@@ -28,6 +33,13 @@ public:
   ChunkManager &chunkManager() { return m_chunkManager; }
 
   const BlockRegistry &blockRegistry() const { return m_blockRegistry; }
+
+  // Thread-safe function to queue a block action (place or break)
+  void queueBlockAction(const BlockAction &action) {
+    std::lock_guard<std::mutex> lock(m_blockActionQueueMutex);
+    m_blockActionQueue.push(action);
+  }
+  
 private:
   std::atomic<bool> m_running = false;
   void gameLoop();
@@ -41,6 +53,9 @@ private:
   BlockRegistry m_blockRegistry;
 
   tf::Executor m_executor;
+
+  std::queue<BlockAction> m_blockActionQueue;
+  std::mutex m_blockActionQueueMutex;
 };
 
 #endif // ENGINE_H

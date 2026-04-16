@@ -33,6 +33,29 @@ void DebugUI::newFrame() {
   ImGui::NewFrame();
   // ImGui::ShowDemoWindow(); // Remove this line to disable the demo window
   drawWidgets();
+
+  // Crosshair
+  ImDrawList *draw_list = ImGui::GetForegroundDrawList();
+
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+
+  float size = 10.0f;
+  float thickness = 2.0f;
+  ImU32 color = IM_COL32(255, 255, 255, 255);
+
+  // Horizontal line
+  draw_list->AddLine(
+      ImVec2(center.x - size, center.y),
+      ImVec2(center.x + size, center.y),
+      color,
+      thickness);
+
+  // Vertical line
+  draw_list->AddLine(
+      ImVec2(center.x, center.y - size),
+      ImVec2(center.x, center.y + size),
+      color,
+      thickness);
 }
 
 void DebugUI::render() {

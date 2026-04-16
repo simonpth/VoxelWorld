@@ -37,7 +37,8 @@ void Renderer::render() {
   m_debugUI.newFrame();
 
   // Voxel World rendering
-  auto playerController = EngineContext::instance().engine()->playerController();
+  auto engine = EngineContext::instance().engine();
+  auto playerController = engine->playerController();
   playerController->update();
 
   PlayerChunkPos currentChunkPos = playerController->currentChunk();
@@ -91,12 +92,21 @@ void Renderer::render() {
     m_shader->setInt("highlightBlockX", hitPos.x);
     m_shader->setInt("highlightBlockY", hitPos.y);
     m_shader->setInt("highlightBlockZ", hitPos.z);
-    m_shader->setVec3("highlightBlockRelChunkPos", glm::vec3((hitChunkPos.x() - currentChunkPos.x()) * Chunk::SIZE,
-                                                             (hitChunkPos.y() - currentChunkPos.y()) * Chunk::SIZE,
-                                                             (hitChunkPos.z() - currentChunkPos.z()) * Chunk::SIZE));
+    m_shader->setVec3("highlightBlockRelChunkPos", this->relChunkPos(hitChunkPos, currentChunkPos));
     m_shader->setBool("highlightBlock", true);
+
+    if (m_shouldBrakeBlock) {
+      engine->queueBlockAction({hit.blockPos, false});
+      m_shouldBrakeBlock = false;
+    } else if (m_shouldPlaceBlock) {
+      engine->queueBlockAction({hit.blockBeforePos, true});
+      m_shouldPlaceBlock = false;
+    }
+
   } else {
     m_shader->setBool("highlightBlock", false);
+    m_shouldBrakeBlock = false;
+    m_shouldPlaceBlock = false;
   }
 
   // Bind the block registry texture buffer object to texture unit 0
@@ -144,30 +154,7 @@ void Renderer::render() {
   for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes) {
     chunkMesh->uploadVerticesIfNeeded();
 
-    float relativeY = (chunkPos.y() - currentChunkPos.y()) * Chunk::SIZE;
-
-    float relativeXP, relativeXN, relativeZP, relativeZN;
-
-    if (chunkPos.x() <= currentChunkPos.x()) {
-      relativeXN = (chunkPos.x() - currentChunkPos.x()) * Chunk::SIZE;
-      relativeXP = relativeXN + m_planetSizeInChunks * Chunk::SIZE;
-    } else {
-      relativeXP = (chunkPos.x() - currentChunkPos.x()) * Chunk::SIZE;
-      relativeXN = relativeXP - m_planetSizeInChunks * Chunk::SIZE;
-    }
-
-    if (chunkPos.z() <= currentChunkPos.z()) {
-      relativeZN = (chunkPos.z() - currentChunkPos.z()) * Chunk::SIZE;
-      relativeZP = relativeZN + m_planetSizeInChunks * Chunk::SIZE;
-    } else {
-      relativeZP = (chunkPos.z() - currentChunkPos.z()) * Chunk::SIZE;
-      relativeZN = relativeZP - m_planetSizeInChunks * Chunk::SIZE;
-    }
-
-    float relativeX = std::abs(relativeXP) < std::abs(relativeXN) ? relativeXP : relativeXN;
-    float relativeZ = std::abs(relativeZP) < std::abs(relativeZN) ? relativeZP : relativeZN;
-
-    glm::vec3 relChunkPos = glm::vec3(relativeX, relativeY, relativeZ);
+    glm::vec3 relChunkPos = this->relChunkPos(chunkPos, currentChunkPos);
 
     if (warpMode == 0) {
       if (!m_frustum.aabbInFrustum(
@@ -255,4 +242,31 @@ void Renderer::processInput(GLFWwindow *window) {
   } else {
     m_rightMousePressed = false;
   }
+}
+
+glm::vec3 Renderer::relChunkPos(const ChunkPosition &chunkPos, const PlayerChunkPos &currentChunkPos) const {
+  float relativeY = (chunkPos.y() - currentChunkPos.y()) * Chunk::SIZE;
+
+  float relativeXP, relativeXN, relativeZP, relativeZN;
+
+  if (chunkPos.x() <= currentChunkPos.x()) {
+    relativeXN = (chunkPos.x() - currentChunkPos.x()) * Chunk::SIZE;
+    relativeXP = relativeXN + m_planetSizeInChunks * Chunk::SIZE;
+  } else {
+    relativeXP = (chunkPos.x() - currentChunkPos.x()) * Chunk::SIZE;
+    relativeXN = relativeXP - m_planetSizeInChunks * Chunk::SIZE;
+  }
+
+  if (chunkPos.z() <= currentChunkPos.z()) {
+    relativeZN = (chunkPos.z() - currentChunkPos.z()) * Chunk::SIZE;
+    relativeZP = relativeZN + m_planetSizeInChunks * Chunk::SIZE;
+  } else {
+    relativeZP = (chunkPos.z() - currentChunkPos.z()) * Chunk::SIZE;
+    relativeZN = relativeZP - m_planetSizeInChunks * Chunk::SIZE;
+  }
+
+  float relativeX = std::abs(relativeXP) < std::abs(relativeXN) ? relativeXP : relativeXN;
+  float relativeZ = std::abs(relativeZP) < std::abs(relativeZN) ? relativeZP : relativeZN;
+
+  return glm::vec3(relativeX, relativeY, relativeZ);
 }

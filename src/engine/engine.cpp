@@ -67,13 +67,17 @@ void Engine::tick() {
 
   // Example of setting a block in front of the player every tick (for testing)
   updateTaskflow.emplace([this]() {
-    auto playerChunkPos = m_playerController->currentChunk();
-    glm::vec3 pos = m_playerController->position() + m_playerController->front() * 5.0f; // Position 5 units in front of the player
-    glm::ivec3 worldPos;
-    worldPos.x = std::round(pos.x) + playerChunkPos.x() * Chunk::SIZE;
-    worldPos.y = std::round(pos.y) + playerChunkPos.y() * Chunk::SIZE;
-    worldPos.z = std::round(pos.z) + playerChunkPos.z() * Chunk::SIZE;
-    // m_chunkManager.setBlockAndUpdate(worldPos, Block(4));
+    std::lock_guard<std::mutex> lock(m_blockActionQueueMutex);
+    while (!m_blockActionQueue.empty()) {
+      BlockAction action = m_blockActionQueue.front();
+      m_blockActionQueue.pop();
+
+      if (action.place) {
+        m_chunkManager.setBlockAndUpdate(action.blockPos, Block(2)); // Example: place block with ID 2
+      } else {
+        m_chunkManager.setBlockAndUpdate(action.blockPos, Block(0)); // Example: break block (set to air)
+      }
+    }
   });
 
   // Wait for all update tasks to finish before the next tick

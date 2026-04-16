@@ -30,6 +30,7 @@ public:
 
   bool uiWantCaptureMouse() const { return m_debugUI.wantsMouse(); }
 
+  glm::vec3 relChunkPos(const ChunkPosition &chunkPos, const PlayerChunkPos &currentChunkPos) const;
 private:
   // Player controller inputs
   bool m_firstRender = true;
