@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "engine/algorithm/raytraversal.h"
 #include "engine/enginecontext.h"
 
 static glm::vec3 skyColor = glm::vec3(0.145f, 0.655f, 0.855f);
@@ -76,6 +77,27 @@ void Renderer::render() {
   m_shader->setBool("useTextures", settings.useTextures());
   m_shader->setFloat("textureFadeDistance", settings.textureFadeDistance());
   m_shader->setFloat("textureFadeStrength", settings.textureFadeStrength());
+
+  // Find hit block of player's crosshair
+  const float maxRayDistance = 5.0f; // Maximum distance to check for block hits
+  Ray ray;
+  ray.origin = playerPos + glm::vec3(currentChunkPos.x() * Chunk::SIZE, currentChunkPos.y() * Chunk::SIZE, currentChunkPos.z() * Chunk::SIZE);
+  ray.direction = playerController->front();
+  auto world = EngineContext::instance().engine()->world();
+  RayHit hit = RayTraversal::traverse(ray, maxRayDistance, world.get());
+
+  if (hit.hit) {
+    auto [hitChunkPos, hitPos] = World::worldPosToChunkAndBlockPos(hit.blockPos);
+    m_shader->setInt("highlightBlockX", hitPos.x);
+    m_shader->setInt("highlightBlockY", hitPos.y);
+    m_shader->setInt("highlightBlockZ", hitPos.z);
+    m_shader->setVec3("highlightBlockRelChunkPos", glm::vec3((hitChunkPos.x() - currentChunkPos.x()) * Chunk::SIZE,
+                                                             (hitChunkPos.y() - currentChunkPos.y()) * Chunk::SIZE,
+                                                             (hitChunkPos.z() - currentChunkPos.z()) * Chunk::SIZE));
+    m_shader->setBool("highlightBlock", true);
+  } else {
+    m_shader->setBool("highlightBlock", false);
+  }
 
   // Bind the block registry texture buffer object to texture unit 0
   m_blockRegistryTBO.bind(0);
@@ -204,9 +226,33 @@ void Renderer::processInput(GLFWwindow *window) {
   m_lastX = xpos;
   m_lastY = ypos;
 
-  const float sensitivity = 0.1f;
-  xoffset *= sensitivity;
-  yoffset *= sensitivity;
+  // Ignore large jumps in mouse position which can happen when the cursor is warped to the center of the screen
+  float threshold = 500.0f;
+  if (std::abs(xoffset) < threshold && std::abs(yoffset) < threshold) {
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
 
-  playerController->addRotation(glm::vec3(yoffset, xoffset, 0.0f));
+    playerController->addRotation(glm::vec3(yoffset, xoffset, 0.0f));
+  }
+
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    // Handle left mouse button press
+    if (!m_leftMousePressed) {
+      m_shouldBrakeBlock = true;
+      m_leftMousePressed = true;
+    }
+  } else {
+    m_leftMousePressed = false;
+  }
+
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    // Handle right mouse button press
+    if (!m_rightMousePressed) {
+      m_shouldPlaceBlock = true;
+      m_rightMousePressed = true;
+    }
+  } else {
+    m_rightMousePressed = false;
+  }
 }

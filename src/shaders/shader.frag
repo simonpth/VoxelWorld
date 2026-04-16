@@ -4,6 +4,8 @@ flat in uint blockIdShared;
 flat in uint rotationShared;
 in vec2 uvShared;
 
+flat in uint highlightBlockShared;
+
 in float horizontalDistance;
 in vec3 relPosShared;
 
@@ -91,6 +93,12 @@ void main() {
 
   float fogFactor = clamp((horizontalDistance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
   color = mix(color, fogColor, fogFactor);
+
+  if (highlightBlockShared == 1u) {
+    if (uvShared.x < 0.05 || uvShared.x > 0.95 || uvShared.y < 0.05 || uvShared.y > 0.95) {
+      color = mix(color, vec3(0.1, 0.1, 0.1), 0.8); // black for highlight outline
+    }
+  }
 
   FragColor = vec4(color, baseColor.a);
 }

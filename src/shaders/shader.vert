@@ -11,6 +11,14 @@ uniform vec3 playerPos; // relative to current chunk origin
 uniform int warpMode; // 0 = flat, 1 = plane to sphere mapping, 2 = only move y down based on curvature
 uniform mat4 vp;
 
+uniform int highlightBlockX;
+uniform int highlightBlockY;
+uniform int highlightBlockZ;
+uniform vec3 highlightBlockRelChunkPos;
+uniform bool highlightBlock;
+
+flat out uint highlightBlockShared;
+
 flat out uint blockIdShared;
 flat out uint rotationShared;
 out vec2 uvShared;
@@ -114,4 +122,11 @@ void main() {
 
   blockIdShared = blockID;
   rotationShared = rotation;
+
+  if (highlightBlock && int(x)/8 == highlightBlockX && int(y)/8 == highlightBlockY && int(z)/8 == highlightBlockZ && 
+      distance(relativeChunkPos, highlightBlockRelChunkPos) < 0.01) {
+    highlightBlockShared = 1u;
+  } else {
+    highlightBlockShared = 0u;
+  }
 }

@@ -21,6 +21,7 @@ set(SOURCES
 
   src/engine/algorithm/chunkgeneration.cpp
   src/engine/algorithm/chunkmeshing.cpp
+  src/engine/algorithm/raytraversal.cpp
 
   src/engine/data/chunkmanager.cpp
   src/engine/data/world.cpp

@@ -37,6 +37,11 @@ private:
   double m_lastY = 0;
   bool m_firstMouse = true;
 
+  bool m_leftMousePressed = false;
+  bool m_rightMousePressed = false;
+  bool m_shouldPlaceBlock = false;
+  bool m_shouldBrakeBlock = false;
+
   // Rendering resources
   std::atomic<int> m_windowWidth, m_windowHeight;
 
