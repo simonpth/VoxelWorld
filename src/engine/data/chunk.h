@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <memory>
 
 #define CHUNK_SIZE 32
 #define CHUNK_CHUNKPIECES 4
