@@ -83,5 +83,5 @@ std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) 
     }
   }
 
-  return std::move(chunk);
+  return chunk;
 }
