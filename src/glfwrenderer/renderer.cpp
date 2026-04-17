@@ -6,14 +6,28 @@
 #include "engine/algorithm/raytraversal.h"
 #include "engine/enginecontext.h"
 
+#include "whereami.h"
+#include <filesystem>
+namespace fs = std::filesystem;
+
+fs::path getExeDir() {
+  int length = wai_getExecutablePath(nullptr, 0, nullptr);
+  std::string path(length, '\0');
+  wai_getExecutablePath(path.data(), length, nullptr);
+  return fs::path(path).parent_path();
+}
+
 static glm::vec3 skyColor = glm::vec3(0.145f, 0.655f, 0.855f);
 
 void Renderer::initialize(GLFWwindow *window) {
   const Settings &settings = Settings::instance();
+  fs::path base = getExeDir();
+
   m_firstRender = true;
   m_planetSizeInChunks = settings.planetSizeInChunks();
 
-  m_shader = std::make_unique<Shader>("shaders/shader.vert", "shaders/shader.frag");
+  m_shader = std::make_unique<Shader>((base / "shaders/shader.vert").string().c_str(),
+                                      (base / "shaders/shader.frag").string().c_str());
 
   m_shader->use();
   m_shader->setVec3("fogColor", skyColor);
@@ -26,7 +40,7 @@ void Renderer::initialize(GLFWwindow *window) {
   m_blockRegistryTBO.initialize(EngineContext::instance().engine()->blockRegistry());
   m_shader->setInt("blockTextureTBO", 0); // Texture unit 0
 
-  m_textureAtlas.initialize("shaders/textures/atlas.png");
+  m_textureAtlas.initialize((base / "shaders/textures/atlas.png").string().c_str());
   m_shader->setInt("blockTextureAtlas", 1); // Texture unit 1
 
   m_shader->setFloat("planetRadius", settings.planetSizeInChunks() * Chunk::SIZE / 6.2831853072f); // Example planet radius, adjust as needed
