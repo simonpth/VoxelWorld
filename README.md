@@ -43,11 +43,16 @@ Make sure you have a working C++23 compiler and CMake installed. Then follow the
 
 3. Build the project using CMake:
 
+   Linux/Mac:
    ```bash
-   mkdir build
-   cd build
-   cmake ..
-   cmake --build . --config Release
+   cmake -S . -B build
+   cmake --build build
+   ```
+
+   clang on Windows
+   ```bash
+   cmake -S . -B build -T ClangCL
+   cmake --build build
    ```
 
 4. Run the executable:
