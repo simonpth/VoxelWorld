@@ -40,7 +40,7 @@ RayHit RayTraversal::traverse(const Ray &ray, float maxDistance, World *world) {
       hit.blockPos = blockPos;
       hit.blockBeforePos = prevBlockPos;
       // Compute the actual hit point using the t value of the last step
-      float t = std::min({tMax.x, tMax.y, tMax.z});
+      float t = std::min(tMax.x, std::min(tMax.y, tMax.z));
       hit.hitPoint = ray.origin + ray.direction * (t - std::min(tDelta.x, std::min(tDelta.y, tDelta.z)));
       return hit;
     }
