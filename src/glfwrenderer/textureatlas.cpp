@@ -22,7 +22,7 @@ void TextureAtlas::initialize(const char *filePath) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
   } else {
-    std::println(std::cout, "Failed to load texture atlas: %s\n", filePath);
+    std::cout << "Failed to load texture atlas: " << filePath << std::endl;
   }
   stbi_image_free(data);
 

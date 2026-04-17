@@ -42,13 +42,13 @@ bool App::initialize() {
   m_renderer.setWindowWidth(800);
   m_renderer.setWindowHeight(600);
   if (m_window == nullptr) {
-    std::println(std::cout, "Failed to create GLFW window");
+    std::cout << "Failed to create GLFW window" << std::endl;
     return false;
   }
   glfwMakeContextCurrent(m_window);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::println(std::cout, "Failed to initialize GLAD");
+    std::cout << "Failed to initialize GLAD" << std::endl;
     return false;
   }
 
