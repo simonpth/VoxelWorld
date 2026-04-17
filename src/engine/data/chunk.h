@@ -146,7 +146,7 @@ private:
 };
 
 struct ChunkPosition {
-  constexpr ChunkPosition(int16_t x = 0, int16_t y = 0, int16_t z = 0) noexcept
+  ChunkPosition(int16_t x = 0, int16_t y = 0, int16_t z = 0) noexcept
       : m_x(x), m_y(y), m_z(z) {
     if (this->m_x < 0)
       this->m_x += m_planetSizeInChunks; // Wrap around for negative coordinates
@@ -157,21 +157,21 @@ struct ChunkPosition {
     this->m_z %= m_planetSizeInChunks; // Wrap around for positive coordinates
   }
 
-  constexpr bool operator==(const ChunkPosition &other) const noexcept {
+  bool operator==(const ChunkPosition &other) const noexcept {
     return x() == other.x() && y() == other.y() && z() == other.z();
   }
 
-  constexpr ChunkPosition operator+(const ChunkPosition &other) const noexcept {
+  ChunkPosition operator+(const ChunkPosition &other) const noexcept {
     return ChunkPosition(x() + other.x(), y() + other.y(), z() + other.z());
   }
 
-  constexpr ChunkPosition operator-(const ChunkPosition &other) const noexcept {
+  ChunkPosition operator-(const ChunkPosition &other) const noexcept {
     return ChunkPosition(x() - other.x(), y() - other.y(), z() - other.z());
   }
 
-  int16_t x() const noexcept { return m_x; }
-  int16_t y() const noexcept { return m_y; }
-  int16_t z() const noexcept { return m_z; }
+  constexpr int16_t x() const noexcept { return m_x; }
+  constexpr int16_t y() const noexcept { return m_y; }
+  constexpr int16_t z() const noexcept { return m_z; }
 
 private:
   int16_t m_x, m_y, m_z;
@@ -188,7 +188,7 @@ struct ChunkPositionOffset {
 namespace std {
 template <>
 struct hash<ChunkPosition> {
-  constexpr size_t operator()(const ChunkPosition &pos) const noexcept {
+  size_t operator()(const ChunkPosition &pos) const noexcept {
     return (static_cast<size_t>(pos.y()) << 32) |
            (static_cast<size_t>(pos.z()) << 16) | pos.x();
   }
