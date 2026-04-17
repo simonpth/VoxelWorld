@@ -47,14 +47,20 @@ Make sure you have a working C++23 compiler and CMake installed. Then follow the
    mkdir build
    cd build
    cmake ..
-   make
+   cmake --build . --config Release
    ```
 
 4. Run the executable:
 
-   ```bash
-   ./VoxelWorld
-   ```
+    Linux/Mac:
+    ```bash
+    ./VoxelWorld
+    ```
+  
+    Windows:
+    ```bash
+    VoxelWorld.exe
+    ```
 
 ## Licence
 
