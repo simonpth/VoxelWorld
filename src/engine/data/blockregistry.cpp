@@ -1,7 +1,7 @@
 #include "blockregistry.h"
 
 BlockRegistry::BlockRegistry() {
-  m_blockTextures.emplace_back(glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec4(0.0f, 0.58f, 0.031f, 1.0f)); // Grass block
+  m_blockTextures.emplace_back(glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 0), glm::vec4(0.0f, 0.58f, 0.031f, 1.0f)); // Grass block
   m_blockTextureMap.emplace(1, 0);                                                                                       // Block ID 1 maps to texture atlas coordinates (0, 0)
 
   m_blockTextures.emplace_back(glm::vec2(1, 0), glm::vec4(0.588f, 0.294f, 0.0f, 1.0f)); // Dirt block

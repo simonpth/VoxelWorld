@@ -45,7 +45,7 @@ std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) 
 
   float invWorldSize = 1.0f / (m_planetSizeInChunks * Chunk::SIZE);
   float TAU = 6.28318530718f;
-  float scale = m_planetSizeInChunks * Chunk::SIZE / 2.0f; // Adjust this to change the size of terrain
+  float scale = m_planetSizeInChunks * Chunk::SIZE / 3.0f; // Adjust this to change the size of terrain
   std::vector<float> xs(Chunk::AREA), ys(Chunk::AREA),
       zs(Chunk::AREA), ws(Chunk::AREA);
 
