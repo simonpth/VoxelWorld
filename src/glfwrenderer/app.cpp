@@ -58,6 +58,9 @@ bool App::initialize() {
   glfwSetWindowUserPointer(m_window, this);
   m_renderer.initialize(m_window);
 
+  // Create an invisible cursor for Linux where GLFW_CURSOR_DISABLED doesn't hide the cursor visually
+  m_invisibleCursor = createInvisibleCursor();
+
   return true;
 }
 
@@ -82,6 +85,10 @@ void App::mainLoop() {
 
 void App::cleanup() {
   m_renderer.cleanup();
+  if (m_invisibleCursor) {
+    glfwDestroyCursor(m_invisibleCursor);
+    m_invisibleCursor = nullptr;
+  }
   glfwDestroyWindow(m_window);
   m_window = nullptr;
   glfwTerminate();
@@ -96,6 +103,10 @@ void App::processInput() {
 void App::captureFocus() {
   if (!m_captureFocus) {
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // On Linux, use invisible cursor since GLFW_CURSOR_DISABLED doesn't always hide the cursor visually
+    if (m_invisibleCursor) {
+      glfwSetCursor(m_window, m_invisibleCursor);
+    }
     m_captureFocus = true;
   }
 }
@@ -103,6 +114,17 @@ void App::captureFocus() {
 void App::releaseFocus() {
   if (m_captureFocus) {
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetCursor(m_window, nullptr); // Restore default cursor
     m_captureFocus = false;
   }
+}
+
+GLFWcursor* App::createInvisibleCursor() {
+  // Create a 1x1 transparent image for an invisible cursor
+  unsigned char pixels[4] = {0, 0, 0, 0}; // RGBA: fully transparent
+  GLFWimage image;
+  image.width = 1;
+  image.height = 1;
+  image.pixels = pixels;
+  return glfwCreateCursor(&image, 0, 0);
 }
