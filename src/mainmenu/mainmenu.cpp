@@ -56,6 +56,12 @@ void MainMenu::initImGui() {
 
   ImGui_ImplGlfw_InitForOpenGL(m_window, true);
   ImGui_ImplOpenGL3_Init("#version 410");
+
+  float xscale, yscale;
+  glfwGetWindowContentScale(m_window, &xscale, &yscale);
+
+  ImGui::GetIO().FontGlobalScale = xscale;
+  ImGui::GetStyle().ScaleAllSizes(xscale);
 }
 
 void MainMenu::run() {
@@ -101,18 +107,32 @@ void MainMenu::renderUI() {
   ImGui::Text("Voxel World");
 
   // Dropdown for planet size (powers of 2 only: 32, 64, 128, 256, 512, 1024)
-  const char* planetSizeItems[] = {"32", "64", "128", "256", "512", "1024"};
+  const char *planetSizeItems[] = {"32", "64", "128", "256", "512", "1024"};
   int currentPlanetSizeIndex = 0;
 
   // Find current index
   switch (m_planetSizeInChunks) {
-    case 32: currentPlanetSizeIndex = 0; break;
-    case 64: currentPlanetSizeIndex = 1; break;
-    case 128: currentPlanetSizeIndex = 2; break;
-    case 256: currentPlanetSizeIndex = 3; break;
-    case 512: currentPlanetSizeIndex = 4; break;
-    case 1024: currentPlanetSizeIndex = 5; break;
-    default: currentPlanetSizeIndex = 0; break;
+  case 32:
+    currentPlanetSizeIndex = 0;
+    break;
+  case 64:
+    currentPlanetSizeIndex = 1;
+    break;
+  case 128:
+    currentPlanetSizeIndex = 2;
+    break;
+  case 256:
+    currentPlanetSizeIndex = 3;
+    break;
+  case 512:
+    currentPlanetSizeIndex = 4;
+    break;
+  case 1024:
+    currentPlanetSizeIndex = 5;
+    break;
+  default:
+    currentPlanetSizeIndex = 0;
+    break;
   }
 
   if (ImGui::BeginCombo("Planet Size (chunks)", planetSizeItems[currentPlanetSizeIndex])) {
@@ -140,7 +160,7 @@ void MainMenu::renderUI() {
   snprintf(seedBuffer, sizeof(seedBuffer), "%d", m_worldSeed);
   if (ImGui::InputText("World Seed", seedBuffer, sizeof(seedBuffer), ImGuiInputTextFlags_CharsDecimal)) {
     int newSeed = atoi(seedBuffer);
-    if (newSeed >= 0) {  // Only accept positive integers
+    if (newSeed >= 0) { // Only accept positive integers
       m_worldSeed = newSeed;
       Settings::instance().setWorldSeed(m_worldSeed);
     }

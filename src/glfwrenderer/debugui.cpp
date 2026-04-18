@@ -26,6 +26,12 @@ void DebugUI::initialize(GLFWwindow *window) {
   } else {
     glfwSwapInterval(0);
   }
+
+  float xscale, yscale;
+  glfwGetWindowContentScale(window, &xscale, &yscale);
+
+  ImGui::GetIO().FontGlobalScale = xscale;
+  ImGui::GetStyle().ScaleAllSizes(xscale);
 }
 
 void DebugUI::newFrame() {
