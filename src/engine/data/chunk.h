@@ -189,8 +189,18 @@ namespace std {
 template <>
 struct hash<ChunkPosition> {
   size_t operator()(const ChunkPosition &pos) const noexcept {
-    return (static_cast<size_t>(pos.y()) << 32) |
-           (static_cast<size_t>(pos.z()) << 16) | pos.x();
+    uint64_t key = (uint64_t)(uint16_t)pos.x() | ((uint64_t)(uint16_t)pos.y() << 16) | ((uint64_t)(uint16_t)pos.z() << 32);
+
+    // Murmur-inspired mix
+    key = (~key) + (key << 21);
+    key = key ^ (key >> 24);
+    key = (key + (key << 3)) + (key << 8);
+    key = key ^ (key >> 14);
+    key = (key + (key << 2)) + (key << 4);
+    key = key ^ (key >> 28);
+    key = key + (key << 31);
+
+    return (size_t)key;
   }
 };
 } // namespace std
