@@ -73,7 +73,7 @@ void Engine::tick() {
       m_blockActionQueue.pop();
 
       if (action.place) {
-        m_chunkManager.setBlockAndUpdate(action.blockPos, Block(2)); // Example: place block with ID 2
+        m_chunkManager.setBlockAndUpdate(action.blockPos, Block(Settings::instance().blockToPlace())); // Example: place block with ID 2
       } else {
         m_chunkManager.setBlockAndUpdate(action.blockPos, Block(0)); // Example: break block (set to air)
       }

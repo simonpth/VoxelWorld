@@ -20,6 +20,7 @@ void DebugUI::initialize(GLFWwindow *window) {
   m_useTextures = settings.useTextures();
   m_textureFadeDistance = settings.textureFadeDistance();
   m_textureFadeStrength = settings.textureFadeStrength();
+  m_blockToPlace = settings.blockToPlace() - 1;
   if (m_vsync) {
     glfwSwapInterval(1);
   } else {
@@ -78,6 +79,10 @@ void DebugUI::drawWidgets() {
 
   if (ImGui::SliderInt("Render Distance", &m_renderDistance, 1, 32)) {
     Settings::instance().setRenderDistance(m_renderDistance);
+  }
+
+  if (ImGui::Combo("Block to Place", &m_blockToPlace, "Grass\0Dirt\0Stone\0Snow\0")) {
+    Settings::instance().setBlockToPlace(m_blockToPlace + 1);
   }
 
   if (ImGui::Checkbox("VSync", &m_vsync)) {

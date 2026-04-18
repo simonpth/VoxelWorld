@@ -94,12 +94,11 @@ void Renderer::render() {
   m_shader->setFloat("textureFadeStrength", settings.textureFadeStrength());
 
   // Find hit block of player's crosshair
-  const float maxRayDistance = 5.0f; // Maximum distance to check for block hits
   Ray ray;
   ray.origin = playerPos + glm::vec3(currentChunkPos.x() * Chunk::SIZE, currentChunkPos.y() * Chunk::SIZE, currentChunkPos.z() * Chunk::SIZE);
   ray.direction = playerController->front();
   auto world = EngineContext::instance().engine()->world();
-  RayHit hit = RayTraversal::traverse(ray, maxRayDistance, world.get());
+  RayHit hit = RayTraversal::traverse(ray, 16.0f, world.get());
 
   if (hit.hit) {
     auto [hitChunkPos, hitPos] = World::worldPosToChunkAndBlockPos(hit.blockPos);

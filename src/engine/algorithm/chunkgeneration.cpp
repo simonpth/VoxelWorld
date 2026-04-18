@@ -19,9 +19,15 @@ ChunkGeneration::ChunkGeneration() {
 std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) {
   auto chunk = std::make_unique<Chunk>();
 
+  // Simple terrain generation: create a flat terrain at y=128
+  if (pos.y() < 0 || pos.y() >= World::CHUNKHEIGHT) {
+    return chunk; // empty chunk
+  }
+
   std::vector<float> heightValues(Chunk::AREA);
   std::vector<float> snowValues(Chunk::AREA);
 
+  /*
   generator->GenUniformGrid2D(
       heightValues.data(),
       pos.x() * Chunk::SIZE, pos.z() * Chunk::SIZE,
@@ -35,30 +41,48 @@ std::unique_ptr<Chunk> ChunkGeneration::generateChunk(const ChunkPosition &pos) 
       Chunk::SIZE, Chunk::SIZE,
       1.0f, 1.0f,
       m_seed + 1);
+  */
 
-  // Simple terrain generation: create a flat terrain at y=128
-  if (pos.y() < 0 || pos.y() >= World::CHUNKHEIGHT) {
-    return chunk; // empty chunk
-  }
-
-  float edgeDistance = 64.0f; // Distance from the edge over which to apply the falloff
+  float invWorldSize = 1.0f / (m_planetSizeInChunks * Chunk::SIZE);
+  float TAU = 6.28318530718f;
+  float scale = m_planetSizeInChunks * Chunk::SIZE / 2.0f; // Adjust this to change the size of terrain
+  std::vector<float> xs(Chunk::AREA), ys(Chunk::AREA),
+      zs(Chunk::AREA), ws(Chunk::AREA);
 
   for (int z = 0; z < Chunk::SIZE; ++z) {
     for (int x = 0; x < Chunk::SIZE; ++x) {
       int worldX = pos.x() * Chunk::SIZE + x;
       int worldZ = pos.z() * Chunk::SIZE + z;
 
-      // Apply a falloff to the height values near the edges of the world
-      if (worldX < edgeDistance) {
-        heightValues[x + z * Chunk::SIZE] *= std::pow(worldX/edgeDistance, 2.0f);
-      } else if (worldX > m_planetSizeInChunks * Chunk::SIZE - edgeDistance) {
-        heightValues[x + z * Chunk::SIZE] *= std::pow((m_planetSizeInChunks * Chunk::SIZE - worldX)/edgeDistance, 2.0f);
-      }
-      if (worldZ < edgeDistance) {
-        heightValues[x + z * Chunk::SIZE] *= std::pow(worldZ/edgeDistance, 2.0f);
-      } else if (worldZ > m_planetSizeInChunks * Chunk::SIZE - edgeDistance) {
-        heightValues[x + z * Chunk::SIZE] *= std::pow((m_planetSizeInChunks * Chunk::SIZE - worldZ)/edgeDistance, 2.0f);
-      }
+      float angleX = worldX * invWorldSize * TAU;
+      float angleZ = worldZ * invWorldSize * TAU;
+
+      int i = x + z * Chunk::SIZE;
+      xs[i] = std::cos(angleX) * scale;
+      ys[i] = std::sin(angleX) * scale;
+      zs[i] = std::cos(angleZ) * scale;
+      ws[i] = std::sin(angleZ) * scale;
+    }
+  }
+
+  generator->GenPositionArray4D(
+      heightValues.data(),
+      Chunk::AREA,
+      xs.data(), ys.data(), zs.data(), ws.data(),
+      0.0f, 0.0f, 0.0f, 0.0f,
+      m_seed);
+
+  snow->GenPositionArray4D(
+      snowValues.data(),
+      Chunk::AREA,
+      xs.data(), ys.data(), zs.data(), ws.data(),
+      0.0f, 0.0f, 0.0f, 0.0f,
+      m_seed + 1);
+
+  for (int z = 0; z < Chunk::SIZE; ++z) {
+    for (int x = 0; x < Chunk::SIZE; ++x) {
+      int worldX = pos.x() * Chunk::SIZE + x;
+      int worldZ = pos.z() * Chunk::SIZE + z;
 
       int height = heightValues[x + z * Chunk::SIZE] * 48 + 96; // Scale and shift noise to get height
 

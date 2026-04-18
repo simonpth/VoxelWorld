@@ -24,6 +24,8 @@ private:
   bool m_useTextures; // local copy to drive the checkbox
   float m_textureFadeDistance; // local copy to drive the slider
   float m_textureFadeStrength; // local copy to drive the slider
+
+  int m_blockToPlace; // local copy to drive the block selection slider
 };
 
 #endif // DEBUGUI_H
