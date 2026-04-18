@@ -9,7 +9,6 @@ ChunkManager::ChunkManager() {
 
 ChunkManager::~ChunkManager() {
   m_executor.wait_for_all();
-  std::cout << "ChunkManager destructor: All pending chunk updates have completed." << std::endl;
 }
 
 void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
