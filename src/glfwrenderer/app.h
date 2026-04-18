@@ -27,8 +27,10 @@ public:
   const Renderer& renderer() const { return m_renderer; }
 private:
   void processInput();
+  GLFWcursor* createInvisibleCursor();
 
   GLFWwindow *m_window;
+  GLFWcursor *m_invisibleCursor = nullptr;
 
   Renderer m_renderer;
 
