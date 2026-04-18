@@ -39,8 +39,6 @@ set(SOURCES
   lib/imgui/imgui_widgets.cpp
   lib/imgui/imgui_impl_glfw.cpp
   lib/imgui/imgui_impl_opengl3.cpp
-
-  lib/whereami/whereami.c
 )
 
 # Create the executable
@@ -96,9 +94,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE lib/glad/include)
 
 # taskflow
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
-
-# whereami
-target_include_directories(${PROJECT_NAME} PRIVATE lib/whereami)
 
 # OpenGL
 find_package(OpenGL REQUIRED)

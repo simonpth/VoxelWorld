@@ -6,15 +6,50 @@
 #include "engine/algorithm/raytraversal.h"
 #include "engine/enginecontext.h"
 
-#include "whereami.h"
 #include <filesystem>
+#include <stdexcept>
+
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <limits.h>
+#include <mach-o/dyld.h>
+#elif defined(__linux__)
+#include <limits.h>
+#include <unistd.h>
+#endif
+
 namespace fs = std::filesystem;
 
 fs::path getExeDir() {
-  int length = wai_getExecutablePath(nullptr, 0, nullptr);
-  std::string path(length, '\0');
-  wai_getExecutablePath(path.data(), length, nullptr);
-  return fs::path(path).parent_path();
+#if defined(_WIN32)
+  wchar_t buffer[MAX_PATH];
+  DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+  if (len == 0) {
+    throw std::runtime_error("Failed to resolve executable path");
+  }
+  return fs::path(buffer).parent_path();
+
+#elif defined(__APPLE__)
+  char buffer[PATH_MAX];
+  uint32_t size = sizeof(buffer);
+  if (_NSGetExecutablePath(buffer, &size) != 0) {
+    throw std::runtime_error("Failed to resolve executable path");
+  }
+  return fs::canonical(fs::path(buffer)).parent_path();
+
+#elif defined(__linux__)
+  char buffer[PATH_MAX];
+  ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+  if (len == -1) {
+    throw std::runtime_error("Failed to resolve executable path");
+  }
+  buffer[len] = '\0';
+  return fs::path(buffer).parent_path();
+
+#else
+  throw std::runtime_error("Unsupported platform");
+#endif
 }
 
 static glm::vec3 skyColor = glm::vec3(0.145f, 0.655f, 0.855f);
