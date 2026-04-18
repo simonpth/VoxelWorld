@@ -172,6 +172,25 @@ void MainMenu::renderUI() {
     glfwSetWindowShouldClose(m_window, true);
   }
 
+  ImGui::Text("Use the settings above to customize your world before starting the game.");
+  ImGui::Text("You can change the world seed to generate different worlds, and adjust the planet size.");
+  ImGui::Text("Different than in minecraft, the world is not infinite, but a fixed size torus that feels like a sphere.");
+  ImGui::Text("The planet size determines how many chunks are on one axis of the planet - higher values mean a larger world.");
+  ImGui::Text("Use a small world size to really see the curvature of the world when choosing a warp mode.");
+  ImGui::Text("");
+  ImGui::Text("Controls:");
+  ImGui::Text("Use WASD to move, mouse to look around, left click to break blocks, right click to place blocks.");
+  ImGui::Text("Options:");
+  ImGui::Text("- Render Distance: How many chunks away from the player should be rendered.");
+  ImGui::Text("- VSync: Enable or disable vertical synchronization.");
+  ImGui::Text("- Player Speed: How fast the player moves.");
+  ImGui::Text("- Warp Mode: How the world warps around the player.");
+  ImGui::Text(" Flat means no warping, plane to sphere mapping means the world warps in all directions, ");
+  ImGui::Text(" only move y based on distance means the world only warps vertically based on distance from the player. (best for small world sizes)");
+  ImGui::Text("- Block to Place: Which block type is selected for placement when right-clicking.");
+  ImGui::Text("");
+  ImGui::Text("The game is still in early development, so expect missing features. But have fun exploring the world!");
+
   ImGui::End();
 }
 
