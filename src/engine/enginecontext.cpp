@@ -8,6 +8,7 @@ EngineContext &EngineContext::instance()
 
 void EngineContext::deleteEngine()
 {
+  m_deletingEngine.store(true);
   std::unique_lock lock(m_engineMutex);
   if (m_engine)
   {
@@ -17,6 +18,7 @@ void EngineContext::deleteEngine()
 
     m_engine.reset();
   }
+  m_deletingEngine.store(false);
 }
 
 void EngineContext::createEngine()
@@ -34,6 +36,10 @@ void EngineContext::createEngine()
 
 std::shared_ptr<Engine> EngineContext::engine()
 {
+  if(m_deletingEngine.load()) {
+     // Return nullptr if the engine is being deleted to avoid locking issues
+    return nullptr;
+  }
   std::shared_lock lock(m_engineMutex);
   return m_engine;
 }

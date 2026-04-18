@@ -99,7 +99,10 @@ std::unique_ptr<ChunkMeshingData> ChunkMeshing::requestChunkMeshingData(World *w
 }
 
 uint64_t generateVertex(int id, int x, int y, int z, int width, int height, int rotation) {
-  uint32_t atlasIndex = EngineContext::instance().engine()->blockRegistry().getAtlasIndex(id);
+  auto engine = EngineContext::instance().engine();
+  if (!engine)
+    return 0; // Engine is being deleted, return a default vertex
+  uint32_t atlasIndex = engine->blockRegistry().getAtlasIndex(id);
   return ((static_cast<uint64_t>(atlasIndex) & 0xFFFF) << 48) |
          ((static_cast<uint64_t>(x) & 0xFF) << 40) |
          ((static_cast<uint64_t>(y) & 0xFF) << 32) |

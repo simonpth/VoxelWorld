@@ -9,6 +9,7 @@ ChunkManager::ChunkManager() {
 
 ChunkManager::~ChunkManager() {
   m_executor.wait_for_all();
+  std::cout << "ChunkManager destructor: All pending chunk updates have completed." << std::endl;
 }
 
 void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
@@ -57,7 +58,10 @@ void ChunkManager::updateLoadedMeshes(PlayerChunkPos playerChunkPos) {
 void ChunkManager::setBlockAndUpdate(glm::ivec3 worldPos, Block block) {
   auto [chunkPos, pos] = World::worldPosToChunkAndBlockPos(worldPos);
 
-  auto world = EngineContext::instance().engine()->world();
+  auto engine = EngineContext::instance().engine();
+  if (!engine)
+    return; // Engine is being deleted, abort the update
+  auto world = engine->world();
   world->setBlock(worldPos, block);
 
   // Update the chunk containing the block and its neighbors if the block is on the edge of the chunk
@@ -98,7 +102,7 @@ void ChunkManager::setRenderDistance(int distance) {
   for (int z = -distance; z <= distance; ++z) {
     for (int x = -distance; x <= distance; ++x) {
       int distanceAndOne = distance + 1;
-      if(x*x + z*z >= distanceAndOne * distanceAndOne) {
+      if (x * x + z * z >= distanceAndOne * distanceAndOne) {
         continue; // Skip chunks outside the circular render distance
       }
       for (int y = 0; y < World::CHUNKHEIGHT; ++y) {
@@ -119,7 +123,10 @@ void ChunkManager::updateChunkAsync(const ChunkPosition &chunkPos, std::shared_p
   }
   if (vertices) {
     m_executor.silent_async([chunkPos, vertices]() {
-      auto world = EngineContext::instance().engine()->world();
+      auto engine = EngineContext::instance().engine();
+      if (!engine)
+        return; // Engine is being deleted, abort the update
+      auto world = engine->world();
       auto meshingData = ChunkMeshing::requestChunkMeshingData(world.get(), chunkPos);
       ChunkMeshing::updateChunkVertices(vertices, meshingData.get());
     });

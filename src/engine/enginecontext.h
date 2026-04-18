@@ -19,6 +19,8 @@ public:
 private:
   EngineContext() = default;
 
+  std::atomic<bool> m_deletingEngine = false;
+
   std::shared_mutex m_engineMutex;
   std::shared_ptr<Engine> m_engine;
   std::thread m_engineThread;
