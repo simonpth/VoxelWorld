@@ -189,18 +189,26 @@ namespace std {
 template <>
 struct hash<ChunkPosition> {
   size_t operator()(const ChunkPosition &pos) const noexcept {
-    uint64_t key = (uint64_t)(uint16_t)pos.x() | ((uint64_t)(uint16_t)pos.y() << 16) | ((uint64_t)(uint16_t)pos.z() << 32);
+    // Use 12 bits for x, 8 bits for y, and 12 bits for z in the lower 32 bits.
+    // If size_t is 64-bit, pack the remaining coordinate bits in upper bits.
+    const uint16_t x = static_cast<uint16_t>(pos.x());
+    const uint16_t y = static_cast<uint16_t>(pos.y());
+    const uint16_t z = static_cast<uint16_t>(pos.z());
 
-    // Murmur-inspired mix
-    key = (~key) + (key << 21);
-    key = key ^ (key >> 24);
-    key = (key + (key << 3)) + (key << 8);
-    key = key ^ (key >> 14);
-    key = (key + (key << 2)) + (key << 4);
-    key = key ^ (key >> 28);
-    key = key + (key << 31);
+    const uint64_t lower =
+        (static_cast<uint64_t>(x) & 0x0FFFu) |
+        ((static_cast<uint64_t>(y) & 0x00FFu) << 12) |
+        ((static_cast<uint64_t>(z) & 0x0FFFu) << 20);
 
-    return (size_t)key;
+    if constexpr (sizeof(size_t) >= sizeof(uint64_t)) {
+      const uint64_t upper =
+          ((static_cast<uint64_t>(x >> 12) & 0x000Fu) << 32) |
+          ((static_cast<uint64_t>(y >> 8) & 0x00FFu) << 36) |
+          ((static_cast<uint64_t>(z >> 12) & 0x000Fu) << 44);
+      return static_cast<size_t>(lower | upper);
+    }
+
+    return static_cast<size_t>(lower);
   }
 };
 } // namespace std
