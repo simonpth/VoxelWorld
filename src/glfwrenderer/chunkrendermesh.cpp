@@ -44,7 +44,7 @@ void ChunkRenderMesh::initialize()
   glBindVertexArray(0);
 }
 
-void ChunkRenderMesh::uploadVerticesIfNeeded()
+bool ChunkRenderMesh::uploadVerticesIfNeeded()
 {
   if (m_uploadedVersion != m_chunkVertices->version())
   {
@@ -60,7 +60,9 @@ void ChunkRenderMesh::uploadVerticesIfNeeded()
     m_uploadedVersion = m_chunkVertices->version();
 
     m_chunkVertices->unlockShared();
+    return true;
   }
+  return false;
 }
 
 void ChunkRenderMesh::render()

@@ -83,7 +83,7 @@ void DebugUI::drawWidgets() {
   glm::vec3 worldPos = EngineContext::instance().engine()->playerController()->worldPosition();
   ImGui::Text("World Pos: (%.1f, %.1f, %.1f)", worldPos.x, worldPos.y, worldPos.z);
 
-  if (ImGui::SliderInt("Render Distance", &m_renderDistance, 1, 32)) {
+  if (ImGui::SliderInt("Render Distance", &m_renderDistance, 1, 48)) {
     Settings::instance().setRenderDistance(m_renderDistance);
   }
 

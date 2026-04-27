@@ -19,7 +19,7 @@ public:
   void setChunkVertices(std::shared_ptr<ChunkVertices> vertices) { m_chunkVertices = vertices; }
 
   void initialize();
-  void uploadVerticesIfNeeded();
+  bool uploadVerticesIfNeeded();
 
   void render();
 

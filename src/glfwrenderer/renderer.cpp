@@ -165,7 +165,7 @@ void Renderer::render() {
   int renderDistance = settings.renderDistance() * Chunk::SIZE;
   if (m_fogRenderDistance != renderDistance) {
     m_fogRenderDistance = renderDistance;
-    int fogDelta = 3 * Chunk::SIZE;
+    int fogDelta = 1.5 * Chunk::SIZE;
     if (m_fogRenderDistance > 18) {
       fogDelta = 6 * Chunk::SIZE;
     }
@@ -199,8 +199,14 @@ void Renderer::render() {
     }
   }
 
+  int updateCount = 0;
+
   for (const auto &[chunkPos, chunkMesh] : m_chunkMeshes) {
-    chunkMesh->uploadVerticesIfNeeded();
+    if (updateCount < 100) { // Limit the number of chunks updated per frame
+      if (chunkMesh->uploadVerticesIfNeeded()) {
+        updateCount++;
+      }
+    }
 
     glm::vec3 relChunkPos = this->relChunkPos(chunkPos, currentChunkPos);
 

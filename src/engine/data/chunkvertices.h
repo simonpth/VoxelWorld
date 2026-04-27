@@ -24,19 +24,21 @@ public:
       m_faceVertexCounts[i].store(newVertices[i].size());
     }
 
-    std::vector<uint64_t> emptyVertices;
-    emptyVertices.reserve(totalSize);
+    std::vector<uint64_t> newCombinedVertices;
+    newCombinedVertices.reserve(totalSize);
     for (int i = 0; i < 6; ++i)
     {
-      emptyVertices.insert(emptyVertices.end(), newVertices[i].begin(), newVertices[i].end());
+      newCombinedVertices.insert(newCombinedVertices.end(), newVertices[i].begin(), newVertices[i].end());
     }
 
     std::unique_lock lock(m_verticesMutex);
     uint32_t currentVersion = m_version.load();
     if (version > currentVersion || (currentVersion == UINT32_MAX && currentVersion != version))
     {
-      m_vertices.swap(emptyVertices);
-      m_version.store(version);
+      if(!(totalSize == 0 && m_vertices.empty())) {
+        m_vertices.swap(newCombinedVertices);
+        m_version.store(version);
+      }
     }
   }
 
