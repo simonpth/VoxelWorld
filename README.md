@@ -141,7 +141,7 @@ while (maskN != 0) {
 
 ### Conclusion
 
-Without these optimizations the project just would fall apart and not be playable and explorable at all.
+Without these optimizations the project would just fall apart and would not be playable or explorable at all.
 
 ## Licence
 
